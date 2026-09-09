@@ -4,10 +4,11 @@ title: update skillset to use backlog.md for task tracking and issues
 status: To Do
 assignee: []
 created_date: '2026-09-09 14:57'
-updated_date: '2026-09-09 15:12'
+updated_date: '2026-09-09 15:14'
 labels: []
 dependencies:
   - PI-001
+type: feature
 ordinal: 2000
 ---
 
