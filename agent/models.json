@@ -1,0 +1,24 @@
+{
+  "providers": {
+    "llama-cpp": {
+      "baseUrl": "http://10.200.0.50:8080/v1",
+      "api": "openai-completions",
+      "apiKey": "none",
+      "models": [
+        {
+          "id": "qwen2.5-coder-7b-instruct-q4_k_m.gguf"
+        }
+      ]
+    },
+    "ollama": {
+      "baseUrl": "http://10.200.0.50:11434/v1",
+      "api": "openai-completions",
+      "apiKey": "ollama",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false
+      },
+      "models": []
+    }
+  }
+}

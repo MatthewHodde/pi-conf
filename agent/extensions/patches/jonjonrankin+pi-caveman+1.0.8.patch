@@ -1,0 +1,26 @@
+--- a/node_modules/pi-caveman/extensions/caveman.ts	2026-09-04 19:57:30.601337101 +0000
++++ b/node_modules/pi-caveman/extensions/caveman.ts	2026-09-08 15:38:40.418219564 +0000
+@@ -244,22 +244,7 @@
+ 		}
+ 
+ 		const anim = ANIMATIONS[level];
+-		const setFrame = (frame: string) => {
+-			ctx.ui.setStatus("caveman", frame + " " + theme.fg("muted", "caveman level: ") + theme.fg("text", anim.label));
+-		};
+-
+-		if (!isActive) {
+-			setFrame(anim.frames[0]!);
+-			return;
+-		}
+-
+-		const renderFrame = () => {
+-			setFrame(anim.frames[frameIndex % anim.frames.length]!);
+-			frameIndex++;
+-		};
+-
+-		renderFrame();
+-		timer = setInterval(renderFrame, anim.interval);
++		ctx.ui.setStatus("caveman", theme.fg("muted", "caveman level: ") + theme.fg("text", anim.label));
+ 	}
+ 
+ 	// -- Restore state on session load --

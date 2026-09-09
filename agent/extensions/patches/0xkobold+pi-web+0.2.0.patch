@@ -1,0 +1,23 @@
+--- a/node_modules/@0xkobold/pi-web/dist/search.js	1985-10-26 08:15:00.000000000 +0000
++++ b/node_modules/@0xkobold/pi-web/dist/search.js	2026-09-08 14:04:19.750433628 +0000
+@@ -216,9 +216,17 @@
+             return readability;
+     }
+     // Level 3: JavaScript rendering with Playwright
+-    const pw = await playwrightFetch(url, maxLength, timeoutMs);
+-    if (pw)
+-        return pw;
++    // PATCH(2025-09-08): Guard L3 behind usePlaywright flag. Without this,
++    // cascade always attempts playwrightFetch() even when usePlaywright=false,
++    // causing a failed import('playwright') on environments without a browser
++    // (e.g., smolvm sandbox). This wastes time and tokens on every JS-heavy
++    // site that fails L1/L2. With the guard, L3 only runs when explicitly
++    // requested via use_playwright=true.
++    if (usePlaywright) {
++        const pw = await playwrightFetch(url, maxLength, timeoutMs);
++        if (pw)
++            return pw;
++    }
+     return null;
+ }
+ // ═════════════════════════════════════════════════════════════════════════════

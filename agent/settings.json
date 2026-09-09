@@ -1,0 +1,37 @@
+{
+  "lastChangelogVersion": "0.85.1",
+  "theme": "light/dark",
+  "defaultProvider": "opencode-go",
+  "defaultModel": "mimo-v2.5",
+  "terminal": {
+    "showTerminalProgress": true
+  },
+  "followUpMode": "one-at-a-time",
+  "transport": "auto",
+  "showCacheMissNotices": true,
+  "enableInstallTelemetry": false,
+  "tuiMode": "regular",
+  "fullscreenCopyOnSelect": false,
+  "fullscreenScrollbar": "always",
+  "editorPaddingX": 2,
+  "outputPad": 1,
+  "packages": [
+    "npm:pi-ask-user",
+    "npm:@0xkahi/pi-vim-keys",
+    "npm:pi-ollama",
+    "npm:pi-caveman",
+    "npm/node_modules/@0xkobold/pi-web"
+  ],
+  "extensions": [
+    "~/.pi/agent/extensions/vim-keys-patches.ts"
+  ],
+  "showHardwareCursor": true,
+  "hideThinkingBlock": true,
+  "defaultTools": [
+    "read",
+    "write",
+    "edit",
+    "bash"
+  ],
+  "enabledModels": []
+}
