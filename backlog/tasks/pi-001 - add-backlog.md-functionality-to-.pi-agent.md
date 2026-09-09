@@ -4,8 +4,10 @@ title: add backlog.md functionality to .pi agent
 status: To Do
 assignee: []
 created_date: '2026-09-09 14:56'
+updated_date: '2026-09-09 15:14'
 labels: []
 dependencies: []
+type: feature
 ordinal: 1000
 ---
 
