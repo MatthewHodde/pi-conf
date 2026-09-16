@@ -16,7 +16,7 @@ function detectSmolvm(): SmolvmInfo {
   const isSmolvm = process.env.SMOLVM === "1";
 
   if (!isSmolvm) {
-    return { detected: false, agent: "", availableTools: {} };
+    return { detected: false, availableTools: {} };
   }
 
   const toolsToCheck = [
@@ -113,19 +113,33 @@ export default function (pi: ExtensionAPI) {
   pi.on("tool_call", async (event) => {
     if (event.toolName === "bash") {
       const cmd = event.input.command || "";
-      const blocked = [
-        /\bsmolvm\b/,
+
+      // Block actual smolvm execution (not mentions in URLs/queries)
+      // Match smolvm as command prefix or after pipe/semicolon/&&
+      const smolvmExecPattern =
+        /(?:^|\s|\|\||&&|;)\s*smolvm\s+(run|start|exec|create|list|stop|delete|status|shell)/;
+
+      // These tools are always blocked as they enable nested VMs
+      const blockedTools = [
         /\bqemu-(system|img)\b/,
         /\bkvm\b/,
-        /\bdocker\b/,
-        /\bpodman\b/,
-        /\bvagrant\b/,
-        /\bmultipass\b/,
+        /\bdocker\s+(run|create|exec|start)\b/,
+        /\bpodman\s+(run|create|exec|start)\b/,
+        /\bvagrant\s+(up|ssh|provision)\b/,
+        /\bmultipass\s+(launch|exec|shell)\b/,
         /\bfirejail\b/,
-        /\blxc\b/,
+        /\blxc-?(start|create|attach|execute)\b/,
       ];
 
-      for (const pattern of blocked) {
+      if (smolvmExecPattern.test(cmd)) {
+        return {
+          block: true,
+          reason:
+            "Nested VM commands are not available inside a smolvm sandbox.",
+        };
+      }
+
+      for (const pattern of blockedTools) {
         if (pattern.test(cmd)) {
           return {
             block: true,
