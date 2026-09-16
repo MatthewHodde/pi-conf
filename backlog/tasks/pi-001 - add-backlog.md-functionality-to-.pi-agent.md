@@ -25,3 +25,9 @@ Discuss wrapping backlog with an extension to programatically block agent backlo
 - [x] #4 Skill does not include project setup instructions
 - [x] #5 backlog CLI available globally via npm
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Built three components: (1) global extension backlog-guard.ts that blocks agent-initiated backlog setup, detects backlog projects via config/task directory, and injects context into system prompt; (2) global skill backlog.md with full workflow reference (creation, execution, finalization); (3) npm i -g backlog.md for CLI availability. Verified: backlog task list shows 6 tasks, extension structure valid, skill has correct frontmatter.
+<!-- SECTION:FINAL_SUMMARY:END -->
