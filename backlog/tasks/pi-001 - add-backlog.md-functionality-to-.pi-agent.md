@@ -1,7 +1,7 @@
 ---
 id: PI-001
 title: add backlog.md functionality to .pi agent
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-09 14:56'
 updated_date: '2026-09-16 23:09'
