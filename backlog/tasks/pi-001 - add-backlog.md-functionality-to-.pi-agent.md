@@ -19,9 +19,9 @@ Discuss wrapping backlog with an extension to programatically block agent backlo
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Extension blocks agent-initiated project setup commands
-- [ ] #2 Extension detects backlog projects via config/task directory
-- [ ] #3 Extension injects backlog context into system prompt for detected projects
-- [ ] #4 Skill does not include project setup instructions
-- [ ] #5 backlog CLI available globally via npm
+- [x] #1 Extension blocks agent-initiated project setup commands
+- [x] #2 Extension detects backlog projects via config/task directory
+- [x] #3 Extension injects backlog context into system prompt for detected projects
+- [x] #4 Skill does not include project setup instructions
+- [x] #5 backlog CLI available globally via npm
 <!-- AC:END -->
