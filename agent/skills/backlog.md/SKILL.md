@@ -98,6 +98,7 @@ backlog task edit PI-123 -s "Done"
 
 ## Key Rules
 
+- **Set task to In Progress before doing any work.** Before reading code, writing plans, or making changes: `backlog task edit PI-123 -s "In Progress" -a @agent`. No exceptions. If you start working without this, stop and set it immediately.
 - Use `--plain` for human-readable output, `--json` for scripts
 - Never edit task markdown files directly — always use the CLI
 - Search before creating to avoid duplicates
