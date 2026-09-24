@@ -103,8 +103,11 @@ backlog task edit PI-123 -s "Done"
 The following rules are **enforced by extension** (hard blocks, not optional):
 
 - **Set task to In Progress before doing any work.** Before reading code, writing plans, or making changes: `backlog task edit PI-123 -s "In Progress" -a @agent`. No exceptions.
-- **Ask approval before finalization.** Use `ask_user` before running `--check-ac`, `--final-summary`, or `-s "Done"`. Wait for explicit approval.
 - **Work must be committed before Done.** `-s "Done"` is blocked if uncommitted changes exist. Commit first.
+
+Additional rules (agent-level, not extension-blocked):
+
+- **Ask approval before finalization.** Use `ask_user` before running `--check-ac`, `--final-summary`, or `-s "Done"`. Wait for explicit approval, then execute if approved.
 
 Additional rules:
 
