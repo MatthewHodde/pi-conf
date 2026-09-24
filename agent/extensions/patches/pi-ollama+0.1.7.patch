@@ -1,0 +1,239 @@
+--- a/node_modules/pi-ollama/src/commands.ts
++++ b/node_modules/pi-ollama/src/commands.ts
+@@ -57,13 +57,50 @@ export function registerCommands(
+ 	getModels: () => DiscoveredModel[],
+ 	setModels: (models: DiscoveredModel[]) => void,
+ 	reregisterProvider: (models: DiscoveredModel[]) => void,
++	activateProvider?: () => Promise<boolean>,
++	isProviderRegistered?: () => boolean,
+ ): void {
++	pi.registerCommand("ollama-start", {
++		description: "Manually connect to Ollama and activate the provider",
++		handler: async (_args, ctx) => {
++			if (!activateProvider) {
++				ctx.ui.notify("Manual activation not available", "error");
++				return;
++			}
++
++			ctx.ui.notify("Connecting to Ollama...", "info");
++			const success = await activateProvider();
++
++			if (success) {
++				const models = getModels();
++				ctx.ui.notify(
++					`✓ Ollama connected — ${models.length} model(s) available`,
++					"info",
++				);
++			} else {
++				ctx.ui.notify(
++					`Failed to connect to Ollama at ${settings.baseUrl}. Is the server running?`,
++					"error",
++				);
++			}
++		},
++	});
++
+ 	pi.registerCommand("ollama-status", {
+ 		description: "Show Ollama connection status and currently loaded models",
+ 		handler: async (_args, ctx) => {
+ 			const baseUrl = settings.baseUrl;
+ 			const lines: string[] = [];
+ 			lines.push(`Ollama base URL: ${baseUrl}`);
++
++			// Check if provider is active (manual activation mode)
++			if (isProviderRegistered && !isProviderRegistered()) {
++				lines.push(`Status: INACTIVE (not connected)`);
++				lines.push(``, `Run /ollama-start to connect.`);
++				ctx.ui.notify(lines.join("\n"), "info");
++				return;
++			}
++
+ 			lines.push(
+ 				settings.keepAlive !== undefined
+ 					? `keep_alive: ${settings.keepAlive} (override — sent on every request)`
+@@ -132,6 +169,22 @@ export function registerCommands(
+ 			"Re-discover models from Ollama and re-register the provider",
+ 		handler: async (_args, ctx) => {
+ 			try {
++				// If provider not yet registered (manual mode), do full activation
++				if (activateProvider && isProviderRegistered && !isProviderRegistered()) {
++					const success = await activateProvider();
++					if (success) {
++						const models = getModels();
++						ctx.ui.notify(
++							`Connected and registered ${models.length} model(s) from ${settings.baseUrl}`,
++							"info",
++						);
++					} else {
++						ctx.ui.notify(`Failed to connect to Ollama`, "error");
++					}
++					return;
++				}
++
++				// Provider already registered — refresh model list
+ 				const models = await discoverModels(settings.baseUrl);
+ 				setModels(models);
+ 				reregisterProvider(models);
+--- a/node_modules/pi-ollama/src/index.ts
++++ b/node_modules/pi-ollama/src/index.ts
+@@ -11,6 +11,8 @@
+ //
+ // Environment variables:
+ //   OLLAMA_HOST                  — Ollama server host[:port]. Default: localhost:11434
++//   OLLAMA_MANUAL_ACTIVATION     — Set to "true" (default) to require /ollama-start
++//                                  Set to "false" to auto-connect on startup
+ //   OLLAMA_NATIVE_DEBUG          — Set to "1" to enable debug logging (writes to a file)
+ //   OLLAMA_NATIVE_DEBUG_LOG      — Override default log path
+ //                                  (default: ~/.pi/agent/cache/pi-ollama-debug.log)
+@@ -115,34 +117,10 @@ export default async function (pi: ExtensionAPI): Promise<void> {
+ 		);
+ 	}
+ 
+-	// Seed from cache immediately so the provider is available at startup
+-	// even if Ollama is slow or temporarily unavailable.
+-	let models: DiscoveredModel[] = loadCache();
+-
+-	// Attempt a live discovery. On failure, fall back to the cached list.
+-	try {
+-		models = await discoverModels(settings.baseUrl);
+-	} catch (e) {
+-		if (models.length > 0) {
+-			process.stderr.write(
+-				`[pi-ollama] Ollama not reachable (${String(e)}). ` +
+-					`Loaded ${models.length} model(s) from cache. Run /ollama-refresh when Ollama is available.\n`,
+-			);
+-		} else {
+-			process.stderr.write(
+-				`[pi-ollama] Ollama not reachable and no cache available (${String(e)}). ` +
+-					`Run /ollama-refresh when Ollama is available.\n`,
+-			);
+-		}
+-	}
+-
+-	await resolveStreamClass();
+-
+-	// Register the provider with the current model list.
+-	// On first call there's nothing to unregister; on refresh we attempt to
+-	// unregister and tolerate failure (older pi versions may lack the method —
+-	// duplicate registrations are preferable to a hard crash).
++	// Model list and provider registration state
++	let models: DiscoveredModel[] = [];
+ 	let providerRegistered = false;
++
+ 	const registerProvider = (currentModels: DiscoveredModel[]) => {
+ 		if (providerRegistered) {
+ 			try {
+@@ -171,15 +149,78 @@ export default async function (pi: ExtensionAPI): Promise<void> {
+ 		providerRegistered = true;
+ 	};
+ 
++	// Expose activation function for commands
++	const activateProvider = async (): Promise<boolean> => {
++		// Load from cache first
++		models = loadCache();
++
++		// Attempt live discovery
++		try {
++			models = await discoverModels(settings.baseUrl);
++		} catch (e) {
++			if (models.length === 0) {
++				process.stderr.write(
++					`[pi-ollama] Ollama not reachable and no cache available (${String(e)}).\n`,
++				);
++				return false;
++			}
++			process.stderr.write(
++				`[pi-ollama] Ollama not reachable (${String(e)}). ` +
++					`Using ${models.length} cached model(s).\n`,
++			);
++		}
++
++		await resolveStreamClass();
++		registerProvider(models);
++		return true;
++	};
++
++	// Manual activation mode: skip auto-connect, register commands only
++	if (settings.manualActivation) {
++		// Still need StreamClass for when activation happens
++		await resolveStreamClass();
++
++		registerCommands(
++			pi,
++			settings,
++			() => models,
++			(fresh) => { models = fresh; },
++			registerProvider,
++			activateProvider,
++			() => providerRegistered,
++		);
++		return;
++	}
++
++	// Auto-activation mode (legacy behavior): connect immediately
++	models = loadCache();
++	try {
++		models = await discoverModels(settings.baseUrl);
++	} catch (e) {
++		if (models.length > 0) {
++			process.stderr.write(
++				`[pi-ollama] Ollama not reachable (${String(e)}). ` +
++					`Loaded ${models.length} model(s) from cache. Run /ollama-refresh when Ollama is available.\n`,
++			);
++		} else {
++			process.stderr.write(
++				`[pi-ollama] Ollama not reachable and no cache available (${String(e)}). ` +
++					`Run /ollama-refresh when Ollama is available.\n`,
++			);
++		}
++	}
++
++	await resolveStreamClass();
+ 	registerProvider(models);
+ 
+-	// Wire up commands. /ollama-refresh re-discovers and re-registers.
+ 	registerCommands(
+ 		pi,
+ 		settings,
+ 		() => models,
+ 		(fresh) => { models = fresh; },
+ 		registerProvider,
++		activateProvider,
++		() => providerRegistered,
+ 	);
+ }
+ 
+--- a/node_modules/pi-ollama/src/settings.ts
++++ b/node_modules/pi-ollama/src/settings.ts
+@@ -33,6 +33,12 @@ export interface OllamaExtensionSettings {
+ 	numCtx: number;
+ 	/** Max ghost-token retries before surfacing an error. Default: 2 */
+ 	ghostRetries: number;
++	/**
++	 * When true, pi-ollama does not auto-connect on startup.
++	 * User must run /ollama-start to activate the provider.
++	 * Default: true (manual activation required)
++	 */
++	manualActivation: boolean;
+ 	/**
+ 	 * User-set context length override. Resolution order:
+ 	 *   1. Persisted config from `/ollama-context` slash command
+@@ -111,11 +117,18 @@ export function loadSettings(): OllamaExtensionSettings {
+ 	})();
+ 	const contextLength = persistedContextLength ?? envContextLength;
+ 
++	// manualActivation: default true (user must explicitly start)
++	const rawManualActivation = process.env.OLLAMA_MANUAL_ACTIVATION;
++	const manualActivation = rawManualActivation
++		? rawManualActivation.toLowerCase() !== "false" && rawManualActivation !== "0"
++		: true;
++
+ 	return {
+ 		baseUrl: baseUrl.replace(/\/+$/, ""),
+ 		keepAlive: resolveKeepAlive(persisted.keepAlive, process.env.OLLAMA_KEEP_ALIVE),
+ 		numCtx: 32768,
+ 		ghostRetries,
+ 		contextLength,
++		manualActivation,
+ 	};
+ }
