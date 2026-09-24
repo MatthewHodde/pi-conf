@@ -22,10 +22,13 @@
     "npm:pi-caveman",
     "npm/node_modules/@0xkobold/pi-web",
     "npm:pi-mcp-extension",
-    "npm:pi-web-search"
+    "npm:pi-web-search",
+    "npm:pi-subagents",
+    "npm:@audsiui/pi-graphify"
   ],
   "extensions": [
-    "~/.pi/agent/extensions/vim-keys-patches.ts"
+    "~/.pi/agent/extensions/vim-keys-patches.ts",
+    "~/.pi/agent/extensions/backlog-guard.ts"
   ],
   "showHardwareCursor": true,
   "hideThinkingBlock": true,
