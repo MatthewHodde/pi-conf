@@ -32,6 +32,12 @@ function writeState(state: string): void {
   }
 }
 
+function ringBell(): void {
+  if (!IN_SMOLVM) return;
+  // Write BEL character to stdout — tmux catches it, WM shows urgency
+  process.stdout.write("\x07");
+}
+
 export default function (pi: ExtensionAPI) {
   pi.on("session_start", async () => {
     writeState("idle");
@@ -43,10 +49,12 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("agent_settled", async () => {
     writeState("idle");
+    ringBell();
   });
 
   pi.on("ui_prompt_start", async (event) => {
     writeState("need-input");
+    ringBell();
   });
 
   pi.on("ui_prompt_end", async () => {
@@ -55,5 +63,6 @@ export default function (pi: ExtensionAPI) {
 
   pi.on("session_shutdown", async () => {
     writeState("idle");
+    ringBell();
   });
 }
