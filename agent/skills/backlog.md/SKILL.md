@@ -98,7 +98,14 @@ backlog task edit PI-123 -s "Done"
 
 ## Key Rules
 
-- **Set task to In Progress before doing any work.** Before reading code, writing plans, or making changes: `backlog task edit PI-123 -s "In Progress" -a @agent`. No exceptions. If you start working without this, stop and set it immediately.
+The following rules are **enforced by extension** (hard blocks, not optional):
+
+- **Set task to In Progress before doing any work.** Before reading code, writing plans, or making changes: `backlog task edit PI-123 -s "In Progress" -a @agent`. No exceptions.
+- **Finalization requires human execution.** `--check-ac`, `--final-summary`, and `-s "Done"` are blocked for agents. Ask the user to run these commands in their terminal.
+- **Work must be committed before Done.** `-s "Done"` is blocked if uncommitted changes exist. Commit first.
+
+Additional rules:
+
 - Use `--plain` for human-readable output, `--json` for scripts
 - Never edit task markdown files directly — always use the CLI
 - Search before creating to avoid duplicates
@@ -106,7 +113,6 @@ backlog task edit PI-123 -s "Done"
 - Record the plan before coding, update if approach changes
 - Check ACs only after objective verification (tests, not grep)
 - Do not create follow-up tasks without user approval
-- **Do not finalize tasks without explicit user approval.** Before checking ACs (`--check-ac`), writing a final summary (`--final-summary`), or setting status to Done (`-s "Done"`), ask the user and wait for confirmation. Present what you plan to check/write, then proceed only after the user says yes.
 
 ## Shell Quoting
 
