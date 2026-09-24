@@ -20,11 +20,10 @@
     "npm:@0xkahi/pi-vim-keys",
     "npm:pi-ollama",
     "npm:pi-caveman",
-    "npm/node_modules/@0xkobold/pi-web"
+    "npm/node_modules/@0xkobold/pi-web",
+    "npm:pi-mcp-extension"
   ],
-  "extensions": [
-    "~/.pi/agent/extensions/vim-keys-patches.ts"
-  ],
+  "extensions": [],
   "showHardwareCursor": true,
   "hideThinkingBlock": true,
   "defaultTools": [
