@@ -106,6 +106,7 @@ backlog task edit PI-123 -s "Done"
 - Record the plan before coding, update if approach changes
 - Check ACs only after objective verification (tests, not grep)
 - Do not create follow-up tasks without user approval
+- **Do not finalize tasks without explicit user approval.** Before checking ACs (`--check-ac`), writing a final summary (`--final-summary`), or setting status to Done (`-s "Done"`), ask the user and wait for confirmation. Present what you plan to check/write, then proceed only after the user says yes.
 
 ## Shell Quoting
 
