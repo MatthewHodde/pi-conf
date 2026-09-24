@@ -1,0 +1,14 @@
+{
+  "settings": {
+    "toolPrefix": "mcp",
+    "requestTimeoutMs": 30000,
+    "maxRetries": 3
+  },
+  "mcpServers": {
+    "deepwiki": {
+      "transport": "streamable-http",
+      "url": "https://mcp.deepwiki.com/mcp",
+      "lifecycle": "eager"
+    }
+  }
+}
