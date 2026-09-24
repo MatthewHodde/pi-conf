@@ -1,5 +1,3 @@
 {
-  "app.exit": "ctrl+q",
-  "app.session.delete": "alt+d",
-  "app.model.select": "alt+m"
+  "app.interrupt": ["escape", "alt+escape"]
 }

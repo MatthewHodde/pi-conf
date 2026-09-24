@@ -1,0 +1,13 @@
+--- a/node_modules/@0xkahi/pi-vim-keys/src/vim-modal-editor.ts	1985-10-26 08:15:00.000000000 +0000
++++ b/node_modules/@0xkahi/pi-vim-keys/src/vim-modal-editor.ts	2026-09-23 15:52:30.649930224 +0000
+@@ -191,6 +191,10 @@
+       return;
+     }
+ 
++    // Check app action keybindings (e.g., alt+escape → app.interrupt)
++    const parsed = parseKey(data);
++    if (parsed && this.handleActionCommands(parsed, false)) return;
++
+     super.handleInput(data);
+   }
+ 

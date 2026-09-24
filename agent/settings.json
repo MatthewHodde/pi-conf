@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "0.85.1",
+  "lastChangelogVersion": "0.87.0",
   "theme": "light/dark",
   "defaultProvider": "opencode-go",
   "defaultModel": "mimo-v2.5",
@@ -21,9 +21,12 @@
     "npm:pi-ollama",
     "npm:pi-caveman",
     "npm/node_modules/@0xkobold/pi-web",
-    "npm:pi-mcp-extension"
+    "npm:pi-mcp-extension",
+    "npm:pi-web-search"
   ],
-  "extensions": [],
+  "extensions": [
+    "~/.pi/agent/extensions/vim-keys-patches.ts"
+  ],
   "showHardwareCursor": true,
   "hideThinkingBlock": true,
   "defaultTools": [
