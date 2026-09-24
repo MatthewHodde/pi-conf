@@ -1,8 +1,9 @@
 ---
 name: dig
 description: Cross-domain root-cause diagnosis for bugs, data mismatches,
-  metric anomalies, and recurring problems, found before touching a fix. Use when
-  the user says / dig into this / debug this / why does this keep failing. Do not
+  metric anomalies, and recurring problems, found before touching a fix. Uses
+  Backlog.md `--notes` field for investigation logs. Use when the user says /
+  dig into this / debug this / why does this keep failing. Do not
   trigger for concept-explanation whys (why-is-the-sky-blue knowledge questions),
   first-time errors with obvious messages (the error already states the fix),
   known-cause fixes (coding's job), or debugging the harness session itself
@@ -17,7 +18,7 @@ Repeated failure is the entry signal: a fix that did not fix (still failing afte
 
 Diagnosis is a thinking activity, and each step is driven by a thinking engine: what an engine gives you isn't terminology, it's **the question that step should ask**.
 
-The deliverable of a non-trivial dig is `.issues/<YYYY-MM-DD-topic>/issue.md`: the symptom and reproduction, the hypothesis list with a verdict on each, the probe log, the root-cause reconciliation, the fix, and the regression line. Create it when the dig starts, append as verdicts land. When the user wants it published, rewrite it from the confirmed understanding into issue or PR text, never by copying the working file. Before writing to disk, make sure the draft directory is ignored: if `git check-ignore .issues` fails, append `.issues/` to `.git/info/exclude` (a local ignore, leaving the shared `.gitignore` untouched) and let the user know. In a non-git environment there's no commit risk, so write directly. Build the `topic` path segment as a slug: lowercase, replace whitespace with `-`, strip everything except `[a-z0-9-]`, cap at 60 chars, collapse repeats. Never pass user- or context-derived text to the path unmodified -- reject or rewrite any value containing `/`, `\`, `..`, or leading dots. After building the path, verify it still starts with `.issues/` before writing. This file is three things at once: the vehicle for showing the user the hypothesis list, the counter for the three-strikes stop-loss, and the working memory for picking the investigation back up if the session gets interrupted. Small, obvious problems can skip it, but a dig entered through repeated failure never does: this file is the three-strikes counter, and a problem that already survived two fixes is not small.
+The deliverable of a non-trivial dig is the backlog task's `--notes` field: the symptom and reproduction, the hypothesis list with a verdict on each, the probe log, the root-cause reconciliation, the fix, and the regression line. Record via `backlog task edit <ID> --notes "<content>"` and append as verdicts land with `--append-notes`. When the user wants it published, rewrite from the confirmed understanding into issue or PR text, never by copying the working notes. This field is three things at once: the vehicle for showing the user the hypothesis list, the counter for the three-strikes stop-loss, and the working memory for picking the investigation back up if the session gets interrupted. Small, obvious problems can skip it, but a dig entered through repeated failure never does: these notes are the three-strikes counter, and a problem that already survived two fixes is not small.
 
 ## 1. Reproduce and pin down the symptom
 

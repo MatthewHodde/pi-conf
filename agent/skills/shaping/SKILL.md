@@ -1,6 +1,6 @@
 ---
 name: shaping
-description: Shape an unformed intent into something actionable, whether a requirement spec, a solution design, or a set of genuinely different candidates. Use when the user runs /shaping, or asks to / brainstorm / turn this idea into a spec / help me scope this, or when an open scoping, placement, or naming question rides inside a larger build request, shape that question first, then execute the rest. Do not trigger for executing an existing spec, reviewing documents, direct answers, life or career decisions, or pure delivery of settled content. Describing a problem is not a summons, but asking one is, even from inside an execution list.
+description: Shape an unformed intent into something actionable, whether a requirement spec, a solution design, or a set of genuinely different candidates. Uses Backlog.md `--doc` field for specs and designs. Use when the user runs /shaping, or asks to / brainstorm / turn this idea into a spec / help me scope this, or when an open scoping, placement, or naming question rides inside a larger build request, shape that question first, then execute the rest. Do not trigger for executing an existing spec, reviewing documents, direct answers, life or career decisions, or pure delivery of settled content. Describing a problem is not a summons, but asking one is, even from inside an execution list.
 ---
 
 # shaping: from unformed intent to something actionable
@@ -66,12 +66,12 @@ Lens questions, called by gap:
 
 ## Deliverables
 
-| End state                                     | File                             |
+| End state                                     | Backlog field                   |
 | --------------------------------------------- | -------------------------------- |
 | Declined at the gate                          | none                             |
 | Chosen candidates (names, directions, themes) | none by default, write if asked  |
 | A grounded call (build it or not, which one)  | none by default                  |
-| Requirement spec                              | `.issues/<date-topic>/spec.md`   |
-| Solution design                               | `.issues/<date-topic>/design.md` |
+| Requirement spec                              | `--doc`                          |
+| Solution design                               | `--doc`                          |
 
-On the spec and design paths the file is the deliverable itself. Create it on entry, append each confirmed decision as it lands. No reasoning process in the deliverable. Before writing spec or design files to disk, make sure the draft directory is ignored: if `git check-ignore .issues` fails, append `.issues/` to `.git/info/exclude` (a local ignore, leaving the shared `.gitignore` untouched) and let the user know. In a non-git environment there is no commit risk, so write directly. Build the `topic` path segment as a slug: lowercase, replace whitespace with `-`, strip everything except `[a-z0-9-]`, cap at 60 chars, collapse repeats. Never pass user- or context-derived text to the path unmodified -- reject or rewrite any value containing `/`, `\`, `..`, or leading dots. After building the path, verify it still starts with `.issues/` before writing. Before finalising, self-check for placeholders, contradictions, scope creep and untestable criteria, then show the whole result once for a single overall confirmation. Publishing follows `references/publish.md`. Once a spec or design is approved, suggest a route: small work continues in this session, large work goes to a fresh context per approved slice. Never start building the parts that have not converged.
+On the spec and design paths the `--doc` field is the deliverable itself. Create it on entry via `backlog task edit <ID> --doc "<content>"`, append each confirmed decision as it lands. No reasoning process in the deliverable. Before finalising, self-check for placeholders, contradictions, scope creep and untestable criteria, then show the whole result once for a single overall confirmation. Publishing follows `references/publish.md`. Once a spec or design is approved, suggest a route: small work continues in this session, large work goes to a fresh context per approved slice. Never start building the parts that have not converged.

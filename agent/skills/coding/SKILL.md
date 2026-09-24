@@ -1,13 +1,13 @@
 ---
 name: coding
-description: Development discipline from plan to green. New behaviour and known-cause fixes go red-green-refactor with the failing test watched red first, pure refactors go green-to-green with no manufactured red, and how-should-I-write-this questions get verified against current sources before answering. Use when the user says bug / implement this /  TDD / API / a correction right after a code change. Do not trigger for unknown-cause anomalies (dig's job), unsettled requirements (shaping's job), pure config or docs edits, or explaining concepts.
+description: Development discipline from plan to green. New behaviour and known-cause fixes go red-green-refactor with the failing test watched red first, pure refactors go green-to-green with no manufactured red, and how-should-I-write-this questions get verified against current sources before answering. Uses Backlog.md `--plan` field for design-level plans. Use when the user says bug / implement this / TDD / API / a correction right after a code change. Do not trigger for unknown-cause anomalies (dig's job), unsettled requirements (shaping's job), pure config or docs edits, or explaining concepts.
 ---
 
 # coding: plan, then the right loop
 
 The bar for every line of code written here is **current best practice**: what is recommended and adopted today, not just an answer that runs. "It runs" and "this is how you should do it today" are different claims, and only meeting the first is how code ships resting on yesterday's idiom.
 
-Every writing path starts with a plan, sized to stakes. A trivial change plans in one sentence, in your head. A design-level change plans in `.issues/`. When shaping is installed, it is the planner for those: hand the unsettled requirement there, come back with the spec, and skip straight to red. Without it, plan inline. The plan itself may or may not land on disk, the stakes decide. Planning includes verification: version-sensitive practice (API, CLI, config, idioms) gets checked against an authoritative source before use, never written from memory. Official docs and the repo's own conventions outrank blog posts and recall.
+Every writing path starts with a plan, sized to stakes. A trivial change plans in one sentence, in your head. A design-level change plans via `backlog task edit <ID> --plan "<steps>"`. When shaping is installed, it is the planner for those: hand the unsettled requirement there, come back with the spec, and skip straight to red. Without it, plan inline. The plan itself may or may not land in backlog, the stakes decide. Planning includes verification: version-sensitive practice (API, CLI, config, idioms) gets checked against an authoritative source before use, never written from memory. Official docs and the repo's own conventions outrank blog posts and recall.
 
 ## Dispatch
 

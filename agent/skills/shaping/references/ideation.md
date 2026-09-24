@@ -50,4 +50,4 @@ The requested count wins after dedup. On the quick path: no per-candidate risk p
 
 The deep path may include one wildcard, bolder but still inside the hard constraints, labelled as a boundary marker rather than a rank. A new round on request avoids families already used.
 
-Persist deep ideation only when the user wants it kept: `.issues/<date-topic>/ideas.md`, or a clearer domain name such as `names.md`. Same slug and git-ignore rules as the spec/design deliverables apply.
+Persist deep ideation only when the user wants it kept: `backlog task edit <ID> --doc "<content>"` with the ideas or names content. Same backlog field rules as the spec/design deliverables apply.
