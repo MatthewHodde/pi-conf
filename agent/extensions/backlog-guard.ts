@@ -10,7 +10,7 @@
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { join } from "node:path";
 
@@ -79,6 +79,21 @@ function isContentEditCommand(command: string): boolean {
   return /--plan|--notes|--append-notes|--doc/i.test(command);
 }
 
+/** Check if a task file has status "In Progress" */
+function isTaskInProgress(taskId: string, taskDir: string | null): boolean {
+  if (!taskDir) return false;
+  try {
+    const files = readdirSync(taskDir);
+    const file = files.find(f => f.toLowerCase().startsWith(taskId.toLowerCase()));
+    if (!file) return false;
+    const content = readFileSync(join(taskDir, file), "utf-8");
+    const match = content.match(/^status:\s*["']?(.+?)["']?\s*$/m);
+    return match ? match[1].trim().toLowerCase() === "in progress" : false;
+  } catch {
+    return false;
+  }
+}
+
 /** Check if git working tree has uncommitted changes */
 function hasUncommittedChanges(cwd: string): boolean {
   try {
@@ -111,13 +126,10 @@ function buildBacklogContext(state: BacklogState): string {
 
 export default function (pi: ExtensionAPI) {
   let backlogState: BacklogState = { detected: false, configPath: null, taskDir: null, projectName: null };
-  /** Tasks that have been set to In Progress this session */
-  const inProgressTasks = new Set<string>();
 
   // Detect backlog on session start
   pi.on("session_start", async (_event, ctx) => {
     backlogState = detectBacklog(ctx.cwd);
-    inProgressTasks.clear();
 
     if (backlogState.detected) {
       let taskCount = 0;
@@ -166,11 +178,8 @@ export default function (pi: ExtensionAPI) {
 
     const taskId = extractTaskId(cmd);
 
-    // Track tasks set to In Progress
-    if (taskId && isInProgressCommand(cmd)) {
-      inProgressTasks.add(taskId);
-      return; // Always allow setting In Progress
-    }
+    // Always allow setting In Progress
+    if (taskId && isInProgressCommand(cmd)) return;
 
     // Rule: block finalization commands — user must run them
     if (isFinalizationCommand(cmd)) {
@@ -182,12 +191,14 @@ export default function (pi: ExtensionAPI) {
     }
 
     // Rule: block content edits on tasks not yet In Progress
-    if (taskId && isContentEditCommand(cmd) && !inProgressTasks.has(taskId)) {
-      return {
-        block: true,
-        reason:
-          `Task ${taskId.toUpperCase()} is not In Progress. Set it first: backlog task edit ${taskId.toUpperCase()} -s "In Progress" -a @agent`,
-      };
+    if (taskId && isContentEditCommand(cmd)) {
+      if (!isTaskInProgress(taskId, backlogState.taskDir)) {
+        return {
+          block: true,
+          reason:
+            `Task ${taskId.toUpperCase()} is not In Progress. Set it first: backlog task edit ${taskId.toUpperCase()} -s "In Progress" -a @agent`,
+        };
+      }
     }
 
     // Rule: block Done if uncommitted changes exist
