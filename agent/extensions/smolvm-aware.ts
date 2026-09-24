@@ -67,6 +67,8 @@ function buildSandboxContext(info: SmolvmInfo): string {
     .filter(([, v]) => !v)
     .map(([k]) => k);
 
+  const projectPath = process.env.PROJECT_PATH;
+
   const lines = [
     "## Sandbox Environment",
     "",
@@ -76,6 +78,15 @@ function buildSandboxContext(info: SmolvmInfo): string {
     toolList,
     "",
   ];
+
+  if (projectPath) {
+    lines.push(
+      "### Project directory",
+      `The env var \`PROJECT_PATH\` is set to: \`${projectPath}\``,
+      "Use this to reference the mounted host project. Write output here.",
+      "",
+    );
+  }
 
   if (missingTools.length > 0) {
     lines.push(

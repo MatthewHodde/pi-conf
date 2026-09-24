@@ -5,7 +5,6 @@
  * - Detects backlog projects and injects context into system prompt
  * - Shows backlog task summary on session start
  * - Enforces In Progress before content edits
- * - Blocks finalization commands (user must run them)
  * - Blocks Done if work is uncommitted
  */
 
@@ -28,6 +27,23 @@ function detectBacklog(cwd: string): BacklogState {
     { config: ".backlog/config.yml", tasks: ".backlog/tasks" },
     { config: "backlog.config.yml", tasks: "backlog/tasks" },
   ];
+
+  // PROJECT_PATH fallback (absolute paths)
+  if (process.env.PROJECT_PATH) {
+    const pConfig = join(process.env.PROJECT_PATH, "backlog/config.yml");
+    const pTasks = join(process.env.PROJECT_PATH, "backlog/tasks");
+    if (existsSync(pConfig) || existsSync(pTasks)) {
+      let projectName: string | null = null;
+      if (existsSync(pConfig)) {
+        try {
+          const content = readFileSync(pConfig, "utf-8");
+          const match = content.match(/^project_name:\s*["']?([^"'\n]+)["']?$/m);
+          if (match) projectName = match[1].trim();
+        } catch { /* ignore */ }
+      }
+      return { detected: true, configPath: pConfig, taskDir: pTasks, projectName };
+    }
+  }
 
   for (const { config, tasks } of candidates) {
     const configPath = join(cwd, config);
@@ -60,18 +76,13 @@ function isBacklogInitCommand(command: string): boolean {
  * Matches: backlog task edit PI-123 ..., backlog task PI-123 --plan ...
  */
 function extractTaskId(command: string): string | null {
-  const match = command.match(/backlog(?:\.md)?\s+task(?:|s)\s+(?:edit\s+)?(pi-\d+)/i);
+  const match = command.match(/backlog(?:\.md)?\s+task(?:s)\s+(?:edit\s+)?(pi-\d+)/i);
   return match ? match[1].toLowerCase() : null;
 }
 
 /** Check if command is setting a task to In Progress */
 function isInProgressCommand(command: string): boolean {
   return /-s\s+["']?In Progress["']?/i.test(command);
-}
-
-/** Check if command is a finalization step */
-function isFinalizationCommand(command: string): boolean {
-  return /--check-ac|--check-dod|--final-summary|-s\s+["']?Done["']?/i.test(command);
 }
 
 /** Check if command edits task content fields */
@@ -180,15 +191,6 @@ export default function (pi: ExtensionAPI) {
 
     // Always allow setting In Progress
     if (taskId && isInProgressCommand(cmd)) return;
-
-    // Rule: block finalization commands — user must run them
-    if (isFinalizationCommand(cmd)) {
-      return {
-        block: true,
-        reason:
-          "Finalization commands (`--check-ac`, `--final-summary`, `-s Done`) require human approval. Run this command yourself in your terminal, or ask the user to do so.",
-      };
-    }
 
     // Rule: block content edits on tasks not yet In Progress
     if (taskId && isContentEditCommand(cmd)) {

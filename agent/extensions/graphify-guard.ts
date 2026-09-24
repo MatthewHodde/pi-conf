@@ -29,14 +29,22 @@ function detectGraphify(cwd: string): GraphifyState {
   }
 
   // Check if current repo is indexed
-  const graphifyOut = join(cwd, "graphify-out");
-  const graphPath = join(graphifyOut, "graph.json");
-  const repoIndexed = existsSync(graphPath);
+  // 1. cwd/graphify-out/ (project-local)
+  // 2. PROJECT_PATH/graphify-out/ (env var fallback)
+  const graphPath = join(cwd, "graphify-out", "graph.json");
+  const projectGraph = process.env.PROJECT_PATH
+    ? join(process.env.PROJECT_PATH, "graphify-out", "graph.json")
+    : null;
+  const resolved = existsSync(graphPath)
+    ? graphPath
+    : projectGraph && existsSync(projectGraph)
+      ? projectGraph
+      : null;
 
   return {
     cliAvailable,
-    repoIndexed,
-    graphPath: repoIndexed ? graphPath : null,
+    repoIndexed: resolved !== null,
+    graphPath: resolved,
   };
 }
 
