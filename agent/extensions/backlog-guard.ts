@@ -12,12 +12,20 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { join } from "node:path";
+import { truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
 interface BacklogState {
   detected: boolean;
   configPath: string | null;
   taskDir: string | null;
   projectName: string | null;
+}
+
+interface ActiveTask {
+  id: string;
+  title: string;
+  type: string | null;
+  assignee: string | null;
 }
 
 function detectBacklog(cwd: string): BacklogState {
@@ -105,6 +113,45 @@ function isTaskInProgress(taskId: string, taskDir: string | null): boolean {
   }
 }
 
+/** Find the In Progress task and extract its info */
+function findActiveTask(taskDir: string | null): ActiveTask | null {
+  if (!taskDir) return null;
+  try {
+    const files = readdirSync(taskDir).filter(f => f.endsWith(".md"));
+    for (const file of files) {
+      const content = readFileSync(join(taskDir, file), "utf-8");
+      const statusMatch = content.match(/^status:\s*["']?(.+?)["']?\s*$/m);
+      if (statusMatch && statusMatch[1].trim().toLowerCase() === "in progress") {
+        // Extract ID from filename (e.g., "pi-014 - some-title.md" -> "PI-014")
+        const idMatch = file.match(/^((?:pi|task)-\d+)/i);
+        const id = idMatch ? idMatch[1].toUpperCase() : file.replace(/\.md$/, "").split(" - ")[0];
+        
+        // Extract title from first heading or filename
+        const titleMatch = content.match(/^#\s+(.+)$/m);
+        const title = titleMatch 
+          ? titleMatch[1].replace(/^Task\s+\S+\s*-\s*/i, "")
+          : file.replace(/\.md$/, "").split(" - ").slice(1).join(" - ").trim();
+        
+        // Extract type
+        const typeMatch = content.match(/^type:\s*["']?(.+?)["']?\s*$/m);
+        
+        // Extract assignee
+        const assigneeMatch = content.match(/^assignee:\s*["']?(.+?)["']?\s*$/m);
+        
+        return {
+          id,
+          title: title || "Untitled",
+          type: typeMatch ? typeMatch[1].trim() : null,
+          assignee: assigneeMatch ? assigneeMatch[1].trim() : null,
+        };
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
 /** Check if git working tree has uncommitted changes */
 function hasUncommittedChanges(cwd: string): boolean {
   try {
@@ -137,6 +184,40 @@ function buildBacklogContext(state: BacklogState): string {
 
 export default function (pi: ExtensionAPI) {
   let backlogState: BacklogState = { detected: false, configPath: null, taskDir: null, projectName: null };
+  let activeTask: ActiveTask | null = null;
+  let footerEnabled = true;
+
+  /** Update the active task and refresh footer */
+  function refreshActiveTask(ctx: any) {
+    if (!backlogState.detected || !footerEnabled) return;
+    
+    const prev = activeTask?.id;
+    activeTask = findActiveTask(backlogState.taskDir);
+    
+    // Update footer if task changed
+    if (activeTask?.id !== prev) {
+      updateFooter(ctx);
+    }
+  }
+
+  /** Update status bar with active task */
+  function updateFooter(ctx: any) {
+    if (!footerEnabled) {
+      ctx.ui.setStatus("backlog", undefined);
+      return;
+    }
+    
+    const theme = ctx.ui.theme;
+    const sep = theme.fg("dim", " | ");
+    
+    if (!activeTask) {
+      ctx.ui.setStatus("backlog", `${theme.fg("dim", "📋 NONE")}${sep}`);
+      return;
+    }
+    
+    const taskText = theme.fg("success", `📋 ${activeTask.id} — ${activeTask.title}`);
+    ctx.ui.setStatus("backlog", `${taskText}${sep}`);
+  }
 
   // Detect backlog on session start
   pi.on("session_start", async (_event, ctx) => {
@@ -157,6 +238,9 @@ export default function (pi: ExtensionAPI) {
         `📋 Backlog.md detected${backlogState.projectName ? ` (${backlogState.projectName})` : ""} — ${taskCount} tasks`,
         "info",
       );
+      
+      // Check for active task and set footer
+      refreshActiveTask(ctx);
     }
   });
 
@@ -212,6 +296,12 @@ export default function (pi: ExtensionAPI) {
             "Cannot mark Done with uncommitted changes. Commit your work first, then ask the user to run the command.",
         };
       }
+    }
+
+    // Refresh active task after any backlog command
+    if (/backlog(?:\.md)?\s+task/i.test(cmd)) {
+      // Use setTimeout to let the file system settle
+      setTimeout(() => refreshActiveTask(event.ctx), 100);
     }
   });
 }
