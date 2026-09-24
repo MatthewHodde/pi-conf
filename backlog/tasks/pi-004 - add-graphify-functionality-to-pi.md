@@ -4,7 +4,7 @@ title: add graphify and integrate with skills
 status: Done
 assignee: []
 created_date: '2026-09-09 14:58'
-updated_date: '2026-09-24 02:56'
+updated_date: '2026-09-24 03:04'
 labels: []
 dependencies: []
 type: feature
@@ -47,6 +47,8 @@ Guard pattern: extension detects tool via CLI check (graphify --version or which
 
 <!-- SECTION:NOTES:BEGIN -->
 Skill files (SKILL.md, references, .graphify_version) already present. Guard extension not yet created.
+
+Guard update: Added API key blocking. Graphify now always uses host agent (pi) as LLM. Blocks --backend flags and export *_API_KEY attempts. Never prompts for API keys.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

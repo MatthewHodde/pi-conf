@@ -1,10 +1,10 @@
 ---
 id: PI-006
 title: update skills to use graphify
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-09 15:08'
-updated_date: '2026-09-17 02:06'
+updated_date: '2026-09-17 07:37'
 labels: []
 dependencies:
   - PI-004
@@ -26,3 +26,9 @@ Graphify provides AST-parsed code graphs with call hierarchies, dependencies, an
 - [ ] #2 graphify extract runs on project repos before skill queries
 - [ ] #3 Skill documentation mentions graphify for codebase navigation
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Merged into PI-004 — graphify install + skill integration combined into single task.
+<!-- SECTION:FINAL_SUMMARY:END -->

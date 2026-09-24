@@ -1,10 +1,10 @@
 ---
 id: PI-005
 title: update skills to use deepwiki mcp for public repos
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-09 15:07'
-updated_date: '2026-09-17 02:06'
+updated_date: '2026-09-17 07:35'
 labels: []
 dependencies:
   - PI-003
@@ -26,3 +26,9 @@ Skills like coding, dig, and pi-extension-security-review often need info about 
 - [ ] #2 Fallback to web search when deepwiki doesn't have the repo
 - [ ] #3 Skill documentation mentions deepwiki as preferred source for repo docs
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Merged into PI-003 — deepwiki install + skill integration combined into single task.
+<!-- SECTION:FINAL_SUMMARY:END -->
