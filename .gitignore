@@ -3,3 +3,6 @@
 /backlog
 /agent/models-store.json
 /graphify-out
+/graph-out/cache
+/graph-out
+/agent/models-store.json
