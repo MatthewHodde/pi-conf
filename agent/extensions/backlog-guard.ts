@@ -6,7 +6,7 @@
  * - Show task count notification on session start
  * - Display active (In Progress) task in status bar footer
  * - Enforce task lifecycle: block content edits unless In Progress
- * - Block finalization commands (user must run manually)
+ * - Confirm finalization commands with user before proceeding
  * - Block agent-initiated `backlog init`
  */
 
@@ -273,13 +273,30 @@ export default function (pi: ExtensionAPI) {
       return;
     }
 
-    // Block finalization commands — user must run manually
+    // Finalization commands — confirm with user before proceeding
     if (isFinalizationCommand(cmd)) {
-      return {
-        block: true,
-        reason:
-          "Finalization commands (`--check-ac`, `--final-summary`, `-s Done`) require human approval. Run this command yourself in your terminal, or ask the user to do so.",
-      };
+      if (!event.ctx.hasUI) {
+        return {
+          block: true,
+          reason: "Finalization commands require human approval. Run this command in your terminal.",
+        };
+      }
+
+      const confirmed = await event.ctx.ui.confirm(
+        "Finalize task?",
+        `The agent wants to run: ${cmd}\n\nThis will check AC/DoD or mark the task Done. Allow?`,
+      );
+
+      if (!confirmed) {
+        return { block: true, reason: "Finalization blocked by user." };
+      }
+
+      // Refresh footer after finalization
+      setTimeout(() => {
+        refreshActiveTask();
+        renderFooter(event.ctx);
+      }, 100);
+      return;
     }
 
     // Block content edits on tasks not In Progress
