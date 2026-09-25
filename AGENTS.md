@@ -25,10 +25,10 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
 
 ## git-wt Compatibility
 
-This project uses pi-subagents for graphify queries. git-wt (.bare style) repos work fine for graphify.
+This project uses pi-subagents for mindplace queries. git-wt (.bare style) repos work fine for mindplace.
 
 **Known limitation:** pi-subagents worktree isolation does not follow git-wt path convention when using native provider. Worktrees are created at `{parent}/worktrees/{repo}/pi-worktree-...` instead of git-wt's expected sibling layout `{project}/{branch}`.
 
-**Workaround:** Use `worktreeProvider: "native"` inside git-wt worktrees. graphify works without worktree isolation.
+**Workaround:** Use `worktreeProvider: "native"` inside git-wt worktrees. mindplace works without worktree isolation.
 
 See PI-013 for full research notes.

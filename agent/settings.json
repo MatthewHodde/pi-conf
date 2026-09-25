@@ -24,7 +24,7 @@
     "npm:pi-mcp-extension",
     "npm:pi-web-search",
     "npm:pi-subagents",
-    "npm:@audsiui/pi-graphify"
+    "npm:@patimweb/pi-mindplace"
   ],
   "extensions": [
     "~/.pi/agent/extensions/vim-keys-patches.ts",
