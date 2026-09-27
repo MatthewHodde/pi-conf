@@ -9,6 +9,12 @@
       "transport": "streamable-http",
       "url": "https://mcp.deepwiki.com/mcp",
       "lifecycle": "eager"
+    },
+    "backlog": {
+      "command": "backlog",
+      "args": ["mcp", "start"],
+      "transport": "stdio",
+      "lifecycle": "eager"
     }
   }
 }

@@ -81,7 +81,10 @@ Work in short loops: implement, test, record progress with `--append-notes`.
 
 ### 3. Finalization
 
-**Ask approval before finalization commands.** Use `ask_user` to confirm before running `--check-ac`, `--final-summary`, or `-s Done`.
+**Three requirements before closing:**
+1. **Ask permission** — Present Final Summary and AC status, wait for user approval
+2. **Verify commits** — All work must be committed (`git status` clean)
+3. **Add traceability** — Include commit hashes in Final Summary and `--ref` on task
 
 ```bash
 # Verify each AC with evidence, then check
@@ -91,25 +94,52 @@ backlog task edit PI-123 --check-ac 2
 # Check DoD items
 backlog task edit PI-123 --check-dod 1
 
-# Write final summary
-backlog task edit PI-123 --final-summary "Implemented search, verified with test suite."
+# Add commit references for traceability
+backlog task edit PI-123 --ref "a1b2c3d fix(auth): handle token expiry"
 
-# Set terminal status
+# Write final summary with commit hashes
+backlog task edit PI-123 --final-summary "Implemented search.
+
+Commits:
+- a1b2c3d feat(search): add query parser
+- d4e5f6b test(search): cover edge cases
+
+Files: src/search.ts, src/test/search.test.ts"
+
+# Only after permission + clean commits + traceability:
 backlog task edit PI-123 -s "Done"
 ```
 
-## Key Rules
+## Critical Rules (CRITICAL)
 
-The following rules are **enforced by extension** (hard blocks, not optional):
+**Before closing ANY task (feature, bug, or epic):**
+
+1. **Ask permission** — Present Final Summary and AC status, wait for user approval
+2. **Verify commits** — All work must be committed (`git status` clean)
+3. **Add traceability** — Include commit hashes in Final Summary and `--ref` on task
+
+### Definition of Done
+
+All items must be checked before requesting closure permission:
+
+- [ ] Implementation plan exists and reflects final solution
+- [ ] All acceptance criteria verified with objective evidence
+- [ ] All tests pass (no new warnings/regressions)
+- [ ] Documentation updated if required
+- [ ] All changes committed (clean git status)
+- [ ] Commit references added to task
+- [ ] Modified files listed in task
+- [ ] Final Summary written with commit hashes
+- [ ] Implementation notes capture key decisions
+
+### Hard Rules (enforced)
 
 - **Set task to In Progress before doing any work.** Before reading code, writing plans, or making changes: `backlog task edit PI-123 -s "In Progress" -a @agent`. No exceptions.
 - **Work must be committed before Done.** `-s "Done"` is blocked if uncommitted changes exist. Commit first.
+- **Ask approval before finalization.** Use `ask_user` before running `-s "Done"`. Wait for explicit approval.
+- **Never close without traceability.** Every closed task must have commit references and hashes in Final Summary.
 
-Additional rules (agent-level, not extension-blocked):
-
-- **Ask approval before finalization.** Use `ask_user` before running `--check-ac`, `--final-summary`, or `-s "Done"`. Wait for explicit approval, then execute if approved.
-
-Additional rules:
+### Additional Rules
 
 - Use `--plain` for human-readable output, `--json` for scripts
 - Never edit task markdown files directly — always use the CLI
