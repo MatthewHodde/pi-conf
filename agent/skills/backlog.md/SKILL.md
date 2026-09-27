@@ -83,7 +83,7 @@ Work in short loops: implement, test, record progress with `--append-notes`.
 
 **Three requirements before closing:**
 1. **Ask permission** — Present Final Summary and AC status, wait for user approval
-2. **Verify commits** — All work must be committed (`git status` clean)
+2. **Verify commits** — All work must be committed (`git status` clean) using [Conventional Commits](../conventional-commits/SKILL.md) format
 3. **Add traceability** — Include commit hashes in Final Summary and `--ref` on task
 
 ```bash
@@ -126,7 +126,7 @@ All items must be checked before requesting closure permission:
 - [ ] All acceptance criteria verified with objective evidence
 - [ ] All tests pass (no new warnings/regressions)
 - [ ] Documentation updated if required
-- [ ] All changes committed (clean git status)
+- [ ] All changes committed (clean git status) using conventional commit format
 - [ ] Commit references added to task
 - [ ] Modified files listed in task
 - [ ] Final Summary written with commit hashes
@@ -135,7 +135,7 @@ All items must be checked before requesting closure permission:
 ### Hard Rules (enforced)
 
 - **Set task to In Progress before doing any work.** Before reading code, writing plans, or making changes: `backlog task edit PI-123 -s "In Progress" -a @agent`. No exceptions.
-- **Work must be committed before Done.** `-s "Done"` is blocked if uncommitted changes exist. Commit first.
+- **Work must be committed before Done.** `-s "Done"` is blocked if uncommitted changes exist. Commit first using conventional commit format (see `conventional-commits` skill).
 - **Ask approval before finalization.** Use `ask_user` before running `-s "Done"`. Wait for explicit approval.
 - **Never close without traceability.** Every closed task must have commit references and hashes in Final Summary.
 
