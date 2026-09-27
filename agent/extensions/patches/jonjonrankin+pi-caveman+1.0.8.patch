@@ -1,6 +1,6 @@
 --- a/node_modules/pi-caveman/extensions/caveman.ts	2026-09-04 19:57:30.601337101 +0000
-+++ b/node_modules/pi-caveman/extensions/caveman.ts	2026-09-08 15:38:40.418219564 +0000
-@@ -244,22 +244,7 @@
++++ b/node_modules/pi-caveman/extensions/caveman.ts	2026-09-27 19:40:00.000000000 +0000
+@@ -244,22 +244,12 @@
  		}
  
  		const anim = ANIMATIONS[level];
@@ -20,7 +20,7 @@
 -
 -		renderFrame();
 -		timer = setInterval(renderFrame, anim.interval);
-+		ctx.ui.setStatus("caveman", theme.fg("muted", "caveman level: ") + theme.fg("text", anim.label));
++		ctx.ui.setWidget("caveman", [theme.fg("muted", "caveman level: ") + theme.fg("text", anim.label)], { placement: "aboveEditor" });
  	}
  
  	// -- Restore state on session load --

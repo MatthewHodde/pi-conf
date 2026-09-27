@@ -92,7 +92,7 @@ function findActiveTask(taskDir: string): ActiveTask | null {
 
 // ── Extension ──────────────────────────────────────────────────────────────────
 
-const FOOTER_KEY = "backlog";
+const WIDGET_KEY = "backlog";
 const FOOTER_REFRESH_MS = 50;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -111,24 +111,23 @@ export default function (pi: ExtensionAPI) {
     activeTask = findActiveTask(taskDir);
   }
 
-  function renderFooter() {
+  function renderWidget() {
     if (!lastCtx) return;
 
     if (!activeTask) {
-      lastCtx.ui.setStatus(FOOTER_KEY, undefined);
+      lastCtx.ui.setWidget(WIDGET_KEY, [], { placement: "aboveEditor" });
       return;
     }
 
     const theme = lastCtx.ui.theme;
     const text = theme.fg("success", `📋 ${activeTask.id} — ${activeTask.title}`);
-    const sep = theme.fg("dim", " | ");
-    lastCtx.ui.setStatus(FOOTER_KEY, `${text}${sep}`);
+    lastCtx.ui.setWidget(WIDGET_KEY, [text], { placement: "aboveEditor" });
   }
 
-  function scheduleFooterRefresh() {
+  function scheduleWidgetRefresh() {
     setTimeout(() => {
       refreshActiveTask();
-      renderFooter();
+      renderWidget();
     }, FOOTER_REFRESH_MS);
   }
 
@@ -140,16 +139,16 @@ export default function (pi: ExtensionAPI) {
 
     if (taskDir) {
       refreshActiveTask();
-      renderFooter();
+      renderWidget();
     }
   });
 
   // ── Refresh after MCP edits ───────────────────────────────────────────────
 
   pi.on("tool_call", async (event) => {
-    // Refresh footer after any backlog MCP tool call
+    // Refresh widget after any backlog MCP tool call
     if (event.toolName.startsWith("mcp_backlog_")) {
-      scheduleFooterRefresh();
+      scheduleWidgetRefresh();
     }
   });
 }
