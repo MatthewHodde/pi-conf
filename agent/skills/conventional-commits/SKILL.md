@@ -5,7 +5,20 @@ description: "Enforces conventional commit message format (type: description). U
 
 # Conventional Commits
 
-Format: `<type>[optional scope][optional !]: <description>`
+Format:
+```
+<header>
+
+<body>
+
+<footer>
+```
+
+- **Header**: `<type>[optional scope][optional !]: <description>`
+- **Blank line** separates header from body
+- **Body**: Optional, explains what/why, max 72 chars per line
+- **Blank line** separates body from footer
+- **Footer**: Optional, references issues or documents breaking changes
 
 ## Types
 
@@ -43,7 +56,7 @@ Mark breaking changes with `!` before the colon:
 feat(api)!: remove legacy authentication
 ```
 
-Document breaking changes in the footer:
+Document breaking changes in the footer (after blank line):
 
 ```
 feat(api)!: remove legacy authentication
@@ -51,6 +64,8 @@ feat(api)!: remove legacy authentication
 BREAKING CHANGE: Legacy authentication endpoints have been removed.
 Clients must migrate to the v2 API.
 ```
+
+Footer format: `BREAKING CHANGE: <description>`
 
 ## Choosing the Commit Type
 

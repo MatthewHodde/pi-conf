@@ -22,6 +22,36 @@ function validate(message: string): { ok: boolean; error?: string } {
   if (subject.endsWith("."))
     return { ok: false, error: "Description ends with period" };
 
+  // Breaking changes validation
+  const hasExclamation = subject.includes("!");
+  const hasBreakingFooter = lines.some(l => l.startsWith("BREAKING CHANGE:"));
+  const breakingIndex = lines.findIndex(l => l.startsWith("BREAKING CHANGE:"));
+  
+  // Check if BREAKING CHANGE is in footer section (no body content after it)
+  let isInFooter = true;
+  if (hasBreakingFooter) {
+    // After BREAKING CHANGE, only allow: empty lines, indented lines, or other footer tokens
+    const FOOTER_TOKEN = /^[a-zA-Z-]+([: ])/;
+    for (let i = breakingIndex + 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line.trim()) continue; // empty line OK
+      if (line.startsWith(" ") || line.startsWith("\t")) continue; // indented continuation OK
+      if (FOOTER_TOKEN.test(line)) continue; // other footer token OK
+      isInFooter = false;
+      break;
+    }
+  }
+
+  // Only validate if at least one is present
+  if (hasExclamation || hasBreakingFooter) {
+    if (hasExclamation && !hasBreakingFooter)
+      return { ok: false, error: "Header has ! but missing BREAKING CHANGE: footer" };
+    if (hasBreakingFooter && !hasExclamation)
+      return { ok: false, error: "BREAKING CHANGE: footer requires ! in header" };
+    if (hasBreakingFooter && !isInFooter)
+      return { ok: false, error: "BREAKING CHANGE: must be in footer section (last part of message)" };
+  }
+
   return { ok: true };
 }
 
