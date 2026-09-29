@@ -44,6 +44,30 @@ a file pointing at `./.bare`, and branch worktrees are sibling directories.
 - `DEBUG=1` before a mutating command prints the underlying `git` operations
   instead of executing them.
 
+## Branch naming
+
+Every branch an agent creates follows `<prefix>/<TASK-ID>-<slug>`, for example
+`pi/PI-026-define-enforce-worktree-branch-naming`. Do not type the name by hand — derive it:
+
+```shell
+BRANCH="$(node "$SKILL_DIR/scripts/branch-name.mjs" --task PI-026)"
+git wt add -b "$BRANCH" "$BRANCH"
+```
+
+- `--task PI-026` reads the title from the backlog CLI, so the slug cannot drift from the task.
+- Work with no task: `node scripts/branch-name.mjs --title "ad hoc dns flake repro"` →
+  `pi/wip-ad-hoc-dns-flake-repro`.
+- `--title` overrides the title when the backlog CLI is unavailable.
+- The name is fixed at creation. Never rename the branch afterwards, even if the task is
+  retitled.
+- Delegated runs through pi-subagents: pass the id and slug as the run's `label`, which is
+  what pi-subagents builds the worktree branch from. It appends its own
+  `-<runId>-s<step>-t<index>` suffix after the label. Note that `label` doubles as the
+  run's display text, so the derived string is the trade-off when isolation is on.
+
+Full rules: `backlog/docs/worktree-branch-naming/`. Worktree *directory* names are out of
+scope — in git-wt layout the directory is the branch name and follows automatically.
+
 ## Common commands
 
 Inspect repository health and worktrees:
@@ -108,9 +132,11 @@ printf 'feature\n' | git wt remove feature --delete-remote
 ## Suggested workflow
 
 1. Inspect first with `git wt doctor`, `git wt status`, or `git wt list`.
-2. Explain the planned operation when it will create, remove, or migrate
+2. Derive the branch name with `scripts/branch-name.mjs` and state it before creating
+   anything.
+3. Explain the planned operation when it will create, remove, or migrate
    worktrees.
-3. Prefer a dry-run or `DEBUG=1` preview where available.
-4. Execute the explicit `git wt` command.
-5. Report created paths, removed branches, and any follow-up command the user
+4. Prefer a dry-run or `DEBUG=1` preview where available.
+5. Execute the explicit `git wt` command.
+6. Report created paths, removed branches, and any follow-up command the user
    should run.

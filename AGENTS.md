@@ -23,6 +23,22 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
 </CRITICAL_INSTRUCTION>
 <!-- BACKLOG.MD GUIDELINES END -->
 
+## Branch and Worktree Naming
+
+Agent-created branches follow `<prefix>/<TASK-ID>-<slug>`, default prefix `pi/`:
+`pi/PI-026-define-enforce-worktree-branch-naming`. The slug is 2-5 words from the backlog
+task title, max 40 bytes. Work with no task uses `pi/wip-<slug>`.
+
+Never type the name by hand. Derive it:
+
+```shell
+node ~/.pi/agent/skills/git-wt/scripts/branch-name.mjs --task PI-026
+```
+
+The name is fixed at creation and never renamed afterwards. Rules:
+`backlog/docs/worktree-branch-naming/`. For pi-subagents runs, pass the id and slug as the
+run's `label`.
+
 ## git-wt Compatibility
 
 This project uses pi-subagents for mindplace queries. git-wt (.bare style) repos work fine for mindplace.
