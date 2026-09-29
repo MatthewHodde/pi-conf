@@ -102,6 +102,7 @@ function buildSandboxContext(info: SmolvmInfo): string {
     "- Only mounted host directories persist. Write important output there.",
     "- Do NOT attempt to run nested VMs (no smolvm/KVM inside here).",
     "- Do NOT attempt to install smolvm, Docker, or other container/VM runtimes.",
+    "- Do NOT push to git remotes. Only the host can push.",
     "",
   );
 
@@ -130,6 +131,10 @@ export default function (pi: ExtensionAPI) {
       const smolvmExecPattern =
         /(?:^|\s|\|\||&&|;)\s*smolvm\s+(run|start|exec|create|list|stop|delete|status|shell)/;
 
+      // Block git push — only the host can push
+      const gitPushPattern =
+        /(?:^|\|\||&&|;|\|)\s*(?:(?:bash|sh|zsh|dash|eval)\s+(?:-\w+\s+)*["'][^"']*)?git\s+push\b/i;
+
       // These tools are always blocked as they enable nested VMs
       const blockedTools = [
         /\bqemu-(system|img)\b/,
@@ -147,6 +152,14 @@ export default function (pi: ExtensionAPI) {
           block: true,
           reason:
             "Nested VM commands are not available inside a smolvm sandbox.",
+        };
+      }
+
+      if (gitPushPattern.test(cmd)) {
+        return {
+          block: true,
+          reason:
+            "Git push is blocked in the smolvm sandbox. Only the host can push. Stop and ask the user for instructions.",
         };
       }
 
