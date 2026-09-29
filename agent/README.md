@@ -35,6 +35,7 @@ Detects smolvm sandbox environment and adapts behavior.
 - Scans available tools (git, curl, node, python3, etc.)
 - Injects sandbox context into system prompt
 - Blocks nested VM/container commands (docker, kvm, vagrant, etc.)
+- Blocks `git push` (only host can push) via tool-level regex + prompt instruction
 - Shows tool availability notification on session start
 
 #### smolvm-notify.ts
