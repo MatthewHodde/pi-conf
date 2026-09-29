@@ -3,7 +3,13 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 const TYPES = "feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert";
 const PATTERN = new RegExp(`^(${TYPES})(\\([a-z0-9_-]+\\))?\\!?:\\ .+$`);
 
-function validate(message: string): { ok: boolean; error?: string } {
+const MAX_BODY_LINES = 20;
+
+// Tool/model attribution never belongs in a commit message.
+const AI_REFERENCE =
+  /\b(claude|anthropic|chatgpt|gpt-?[0-9o]|copilot|gemini|codex|llama|cursor|windsurf|aider|ollama|minimax|qwen|deepseek|mistral|co-authored-by|signed-off-by\s+.*(claude|anthropic|ai)|generated (with|by) (an? )?(ai|claude|anthropic|gpt)|🤖)\b/i;
+
+export function validate(message: string): { ok: boolean; error?: string } {
   const lines = message.split("\n");
   const subject = lines[0];
 
@@ -14,6 +20,20 @@ function validate(message: string): { ok: boolean; error?: string } {
     if (lines[i].length > 72)
       return { ok: false, error: `Line ${i + 1} ${lines[i].length} chars (max 72)` };
   }
+  const bodyLineCount = lines
+    .slice(1)
+    .filter(l => l.trim()).length;
+  if (bodyLineCount > MAX_BODY_LINES)
+    return {
+      ok: false,
+      error: `Body ${bodyLineCount} non-blank lines (max ${MAX_BODY_LINES}). Trim to the why, drop the file inventory.`,
+    };
+  const aiHit = lines.find(l => AI_REFERENCE.test(l));
+  if (aiHit)
+    return {
+      ok: false,
+      error: `Tool/model reference not allowed in commit message: ${aiHit.trim()}`,
+    };
   if (!PATTERN.test(subject))
     return {
       ok: false,
