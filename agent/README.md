@@ -62,7 +62,24 @@ Monitors disk usage in smolvm sandboxes.
 | `pi-ask-user` | Interactive user prompts with structured options |
 | `pi-ollama` | Ollama LLM provider integration |
 | `pi-caveman` | Caveman mode ( terse responses ) |
-| `@0xkobold/pi-web` | Web search and fetch tools |
+| `pi-mcp-extension` | MCP server support (backlog, deepwiki) |
+| `pi-web-search` | Provider-native `web_search` (keyless) |
+| `@patimweb/pi-mindplace` | Code knowledge graph (`mindplace_query`/`build`/`explain`) |
+
+### Web search & research
+
+- `web_search` is the workhorse: keyless, provider picked in `web-search.json`
+  (falls back to the conversation model when unset).
+- `url_context` ships with pi-web-search but is **Gemini-only**: it needs a Google
+  API key and a Gemini-compatible model. This setup has no Gemini credentials
+  (providers: opencode-go/ollama/llama-cpp), so the extension auto-suppresses the
+  tool from the active list on every model change — the model never sees it, and a
+  direct call returns "requires a Google Gemini-compatible model". Harmless dead
+  weight; do not document it as available capability.
+- `fetch_content` / `get_search_content` were removed with the web-retrieval
+  extension (PI-033, 2026-09-30, subagent cleanup). `web_search` returns results,
+  not full page bodies — that tradeoff was accepted deliberately.
+- For GitHub repos prefer the deepwiki MCP tools (free, no key) before web search.
 
 ---
 
