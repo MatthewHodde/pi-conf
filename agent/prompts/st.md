@@ -9,9 +9,9 @@ Start backlog task `$1` end to end. The `backlog`, `coding`, `git-wt`,
 `conventional-commits` and `adversarial-review` skills govern the steps below.
 
 **1. Load context**
-- `backlog task view $1 --plain` — always `--plain`; the default is an interactive UI and
-  will not render in a non-TTY session. If the task does not exist, stop and say so.
-- `backlog instructions task-execution` before changing status, plan, or notes.
+- One chained call: `backlog task view $1 --plain && backlog instructions task-execution`.
+  Always `--plain` — the default is an interactive UI and will not render in a non-TTY
+  session. If the task does not exist, stop and say so.
 - Per the `backlog` skill: status to In Progress, then record the design-level plan with
   `backlog task edit $1 --plan "<steps>"` — before any worktree or code exists, sized to
   the stakes. A task already marked In Progress with a plan is recoverable if the work
@@ -116,9 +116,11 @@ says yes in this session.
 Present: merge commit sha, post-merge test output, and a final pass over the acceptance
 criteria. Then ask for approval to close via `ask_user`.
 
-- Only after explicit approval: `backlog instructions task-finalization`, check the
-  acceptance criteria and the Definition of Done, write the final summary with
-  `--final-summary`, and move the task to Done.
+- Only after explicit approval: `backlog instructions task-finalization`, then a single
+  `backlog task edit $1` carrying every `--check-ac <n>` and `--check-dod <n>` flag, the
+  `--final-summary`, and `-s "Done"` — one invocation, not a cascade of edits. Run that
+  same command after checking the acceptance criteria and the Definition of Done against
+  the evidence presented above.
 - If post-merge tests fail, do not ask. Report the failure, fix it on the branch, and
   return to Gate 1 with fresh evidence.
 

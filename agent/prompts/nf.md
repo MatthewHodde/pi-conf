@@ -8,11 +8,10 @@ the shape converges. Stop and wait at each gate. Never self-approve.
 
 **1. Load context**
 - Read the `shaping` skill and the `backlog` skill. Both govern this prompt.
-- `backlog instructions task-creation` before creating anything.
-- `backlog overview` for the current counts.
 
 **2. Search before shaping**
-- `backlog search "$1" --plain` and `backlog task list --plain` for near neighbours.
+- One chained call for the workflow guide and near neighbours:
+  `backlog instructions task-creation && backlog search "$1" --plain && backlog task list --plain`.
 - Duplicate or strict subset of an existing task: stop, report the ID, offer to edit that
   task instead. Do not create a second one.
 
@@ -43,13 +42,13 @@ answer. Do not create on speculation. Reopened shape returns to step 3, not to a
 of the draft.
 
 **6. Create**
-- Only after explicit approval:
-  `backlog task create "<title>" -d "<description>" --ac "<criterion>" ... --type feature --priority <pri>`
+- Only after explicit approval, one chained call — create, parse the new ID from its
+  output, attach the doc, re-read:
+  `backlog task create "<title>" -d "<description>" --ac "<criterion>" ... --type feature --priority <pri> && backlog task edit <ID> --doc "<content>" && backlog task view <ID> --plain`
   Add `--dep`, `--milestone`, `-l` only where the shape justified them. There is no
-  `--doc` on create; attach the spec right after with
-  `backlog task edit <ID> --doc "<content>"`.
-- Re-read the created task: `backlog task view <ID> --plain`. Report the ID and confirm
-  every acceptance criterion survived the CLI round-trip (quoting eats backticks).
+  `--doc` on create — the middle link attaches it.
+- Report the ID and confirm every acceptance criterion survived the CLI round-trip
+  (quoting eats backticks).
 
 **7. Report**
 Markdown, tight:

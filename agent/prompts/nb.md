@@ -8,10 +8,10 @@ diagnosis in this prompt, the fix happens later under `/st`.
 
 **1. Load context**
 - Read the `backlog` skill.
-- `backlog instructions task-creation` before creating anything.
 
 **2. Search first**
-- `backlog search "$1" --plain` and `backlog task list --type bug --plain`.
+- One chained call, before any creating:
+  `backlog instructions task-creation && backlog search "$1" --plain && backlog task list --type bug --plain`.
 - Same error already tracked: stop, report the ID, offer to append the new occurrence
   (`backlog task edit <ID> --append-notes "<new context>"`). Do not create a second one.
 
@@ -51,12 +51,13 @@ Show the whole draft. One question via `ask_user`: create it or revise it. Wait 
 answer. Do not create unprompted.
 
 **7. Create**
-- Only after explicit approval:
-  `backlog task create "<title>" -d "<description>" --ac "<criterion>" ... --type bug --priority <pri>`
+- Only after explicit approval, one chained call — create, parse the new ID from its
+  output, re-read:
+  `backlog task create "<title>" -d "<description>" --ac "<criterion>" ... --type bug --priority <pri> && backlog task view <ID> --plain`
   Add `--dep`, `-m`, `-l` only if justified.
-- Re-read: `backlog task view <ID> --plain`. Confirm the error text and every acceptance
-  criterion survived the CLI round-trip (quoting eats backticks and newlines — for a
-  multi-line paste, escape newlines as `\n` inside the quoted string).
+- Confirm the error text and every acceptance criterion survived the CLI round-trip
+  (quoting eats backticks and newlines — for a multi-line paste, escape newlines as `\n`
+  inside the quoted string).
 
 **8. Report**
 Markdown, tight:
