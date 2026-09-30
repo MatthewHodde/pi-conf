@@ -2,7 +2,7 @@
   "lastChangelogVersion": "0.87.1",
   "theme": "light/dark",
   "defaultProvider": "opencode-go",
-  "defaultModel": "space-bunny-free",
+  "defaultModel": "mimo-v2.6-flash",
   "terminal": {
     "showTerminalProgress": true
   },
