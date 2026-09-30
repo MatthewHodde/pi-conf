@@ -31,14 +31,22 @@ a file pointing at `./.bare`, and branch worktrees are sibling directories.
 ## Operating rules for agents
 
 - Prefer `git wt` (or `git-wt`) over raw `git worktree` commands in a `git-wt`
-  layout so path resolution, fetching, branch cleanup, and safety prompts stay
-  consistent.
-- Prefer explicit, non-interactive commands. Avoid bare `git wt add`,
-  `git wt remove`, and `git wt switch` in automation because they may open
-  `fzf` pickers or prompts.
-- `git wt add` prints the absolute created worktree path on `stdout`. Capture
-  that path if you need to `cd` into the new worktree. Human progress and
-  prompts are written to `stderr`.
+  layout so path resolution, branch cleanup, and safety prompts stay consistent.
+- **Exception — worktree creation.** Use raw `git worktree add`, not `git wt add`.
+  `git wt add` always fetches from the remote first and has no `--no-fetch` escape
+  hatch, so it hard-fails in any environment without a working `ssh` binary or with
+  an unreachable `origin`. Prefer:
+
+  ```shell
+  git --git-dir=.bare worktree add -b "$BRANCH" "$BRANCH" main
+  ```
+
+  The directory name must equal the branch name; that is what keeps the git-wt
+  layout intact. `git wt list` still works afterward and shows the new worktree.
+  `git wt update` also fetches unconditionally — fall back to plain `git fetch` /
+  `git pull` when the network path is broken.
+- Prefer explicit, non-interactive commands. Avoid bare `git wt remove` and
+  `git wt switch` in automation because they may open `fzf` pickers or prompts.
 - Use dry-runs before destructive cleanup. Only delete remote branches when the
   user explicitly asks for remote deletion.
 - `DEBUG=1` before a mutating command prints the underlying `git` operations
@@ -87,7 +95,8 @@ git wt migrate --dry-run
 git wt migrate
 ```
 
-Create worktrees with explicit arguments:
+Create worktrees — raw `git worktree add`, per the operating rules above. For
+reference, these are the `git wt add` equivalents it replaces:
 
 ```shell
 git wt add feature origin/feature
@@ -137,6 +146,7 @@ printf 'feature\n' | git wt remove feature --delete-remote
 3. Explain the planned operation when it will create, remove, or migrate
    worktrees.
 4. Prefer a dry-run or `DEBUG=1` preview where available.
-5. Execute the explicit `git wt` command.
+5. Execute the explicit `git worktree add` (or `git wt` command, per the
+   operating rules above).
 6. Report created paths, removed branches, and any follow-up command the user
    should run.
