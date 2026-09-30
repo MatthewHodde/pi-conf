@@ -32,6 +32,8 @@ a file pointing at `./.bare`, and branch worktrees are sibling directories.
 
 - Prefer `git wt` (or `git-wt`) over raw `git worktree` commands in a `git-wt`
   layout so path resolution, branch cleanup, and safety prompts stay consistent.
+- mindplace (PI-013): git-wt (.bare style) repos work fine for mindplace — the graph
+  tools read the repo directly from the worktree.
 - **Exception — worktree creation.** Use raw `git worktree add`, not `git wt add`.
   `git wt add` always fetches from the remote first and has no `--no-fetch` escape
   hatch, so it hard-fails in any environment without a working `ssh` binary or with
