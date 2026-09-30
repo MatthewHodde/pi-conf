@@ -5,16 +5,17 @@ argument-hint: "<backlog-id>"
 
 Two hard approval gates. Stop and wait at each. Never self-approve either one.
 
-Start backlog task `$1` end to end.
+Start backlog task `$1` end to end. The `backlog`, `coding`, `git-wt`,
+`conventional-commits` and `adversarial-review` skills govern the steps below.
 
 **1. Load context**
 - `backlog task view $1 --plain` — always `--plain`; the default is an interactive UI and
   will not render in a non-TTY session. If the task does not exist, stop and say so.
 - `backlog instructions task-execution` before changing status, plan, or notes.
-- Set status to In Progress and record the design-level plan with `--plan` now, before any
-  worktree or code exists: `backlog task edit $1 --plan "<steps>"`. A one-line plan is
-  not a plan; size it to the stakes. If the work later fails, a task already marked In
-  Progress with a plan is recoverable — a task silently untouched is not.
+- Per the `backlog` skill: status to In Progress, then record the design-level plan with
+  `backlog task edit $1 --plan "<steps>"` — before any worktree or code exists, sized to
+  the stakes. A task already marked In Progress with a plan is recoverable if the work
+  fails; a task silently untouched is not.
 
 **2. Plan review — ask first, do not assume**
 - Ask the user whether they want a review of the task before any work starts: gaps in the
@@ -30,7 +31,7 @@ Start backlog task `$1` end to end.
   verdict is input to step 2's discussion, not a gate of its own.
 
 **3. Worktree**
-- Derive the branch name, never type it by hand:
+- Derive the branch name with the `git-wt` skill, never by hand:
   `BRANCH="$(node ~/.pi/agent/skills/git-wt/scripts/branch-name.mjs --task $1)"`
   State the name before creating anything.
 - Work from the repo root — relative paths below resolve against cwd:
@@ -38,12 +39,9 @@ Start backlog task `$1` end to end.
 - Resolve the base branch and check it is current. Do not fetch; this repo is local
   first. If `refs/remotes/origin/<base>` exists and differs from local `<base>`, stop and
   report that the base is behind and let the user decide.
-- Detect layout with `git rev-parse --git-common-dir`. Output ending in `.bare` means the
-  bare git-wt layout; anything else (including `.git`) means plain.
-- Bare layout:
-  `git --git-dir="$ROOT/.bare" worktree add -b "$BRANCH" "$ROOT/$BRANCH" "$BASE"`
-  (do not use `git wt add`; it fetches unconditionally).
-- Plain layout:
+- Detect layout and create the worktree per the `git-wt` skill (detect with
+  `git rev-parse --git-common-dir`; a result ending in `.bare` is the bare layout and
+  uses raw `git worktree add` — `git wt add` fetches unconditionally). Plain layout:
   `git worktree add -b "$BRANCH" "$ROOT/../$BRANCH" "$BASE"`
   The path is a sibling of the repo root, never inside it. In the bare layout the
   directory name equals the branch name; that is what keeps the layout intact.
@@ -61,14 +59,9 @@ Start backlog task `$1` end to end.
 - Load the `coding` skill and follow it: new behavior and known-cause fixes go
   red-green-refactor, and watch the failing test fail before implementing.
 - After refactor and before Gate 1, run the `adversarial-review` skill over the
-  whole branch diff: severity-ranked findings from its four lenses (every deletion
-  justified via history and callers, every new abstraction born of the problem not the
-  implementation, every change's callers beyond the diff, plus one currency check for
-  deprecated or superseded idioms). The skill runs inline in this session: it declares
-  the stance switch and re-reads at tool level, so the review
-  never runs on the memory of writing the code.
-  Report acceptance-criteria findings separately from lens findings so one axis does not
-  mask the other. This is the review of the code, not the plan review from step 2.
+  whole branch diff, inline in this session. Report acceptance-criteria findings
+  separately from lens findings so one axis does not mask the other. This is the review
+  of the code, not the plan review from step 2.
 - Commit as you go using the `conventional-commits` format. No `--no-verify`.
 
 **5. Gate 1 — evidence before merge**
