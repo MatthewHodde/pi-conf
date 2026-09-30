@@ -32,6 +32,9 @@ One approval gate. Never self-approve.
 As each hypothesis settles:
 `backlog task edit $1 --append-notes "- [hypothesis] verdict: <evidence>"`.
 The notes carry the hypothesis list and the three-strikes counter per the dig skill.
+Three dead-end probe rounds on the same symptom means rebuild the understanding from
+step 2's starting point, or stop and ask — the skill's counter counts landed fixes,
+which never happen here.
 
 **4. The gate before you claim it**
 When the dig skill's reconciliation bar is met (evidence explains the symptom's
