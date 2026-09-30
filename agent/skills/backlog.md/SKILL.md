@@ -149,6 +149,16 @@ All items must be checked before requesting closure permission:
 - Check ACs only after objective verification (tests, not grep)
 - Do not create follow-up tasks without user approval
 
+## Ready-Set Review Standard (`/bl`, `/bla`)
+
+Judge every task in the ready set against these four before recommending it:
+
+- Real acceptance criteria, or at least a description concrete enough to plan against.
+- Dependencies satisfied, not merely absent.
+- Not already in flight (`In Progress` means someone or something has it).
+- Scope fits one branch and one worktree. A task that wants three subsystems is not
+  ready, it needs splitting. Say so instead of recommending it.
+
 ## Shell Quoting
 
 When task text includes backticks, use single quotes:

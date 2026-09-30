@@ -19,26 +19,19 @@ the shape converges. Stop and wait at each gate. Never self-approve.
 **3. Shape the intent — the `shaping` skill, inline**
 Feature idea: `$1`
 
-- Gauge the gap from what the user said. Enter at the level that is actually missing —
-  no blank-slate questions, no fact the environment can answer.
-- At most one real decision per round, carrying a recommendation, its grounds, and what
-  would overturn it. Always keep a "none of these, reopen" exit.
-- Candidate the user brings is a candidate, not a decision. Judge it alongside the rest.
-- Inversion lens is never skipped: "what would count as failure?" Those answers become
-  the acceptance criteria.
-- Confirmed decisions land in the working notes as they are made, not reconstructed later.
-- An absent user waives the pause, not the shaping: proceed on the recommendation and
-  write the grounds where the user can reopen them.
-- Stop the moment no affordable action would change the deliverable.
+Read the skill and work it as written: gauge the gap and enter at the level that is
+actually missing; one real decision per round with recommendation, grounds, and
+overturning evidence; inversion lens never skipped — failure answers become the
+acceptance criteria; confirmed decisions recorded as they land; stop the moment no
+affordable action would change the deliverable.
 
 **4. Draft the task**
-Assemble, from the converged shape only:
+Assemble from the converged shape only, following the `backlog` skill's creation rules:
 
 - **Title** — one line, the change not the goal.
-- **Description** — the problem and the grounds. No reasoning process, no rejected
-  candidates, no placeholders.
-- **Acceptance criteria** — behavior, not implementation steps. Testable. At least two
-  axes: the new behavior holds, and old behavior does not regress.
+- **Description** — the problem and the grounds.
+- **Acceptance criteria** — behavior, not implementation steps; the shaping skill's
+  inversion rule already fixes the two axes.
 - **Type** `feature`, **priority**, **dependencies** on real IDs only.
 - If the shape produced a requirement spec or solution design, it goes in `--doc` —
   that field is the deliverable, not a dump of the conversation.

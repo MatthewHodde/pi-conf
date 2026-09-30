@@ -4,7 +4,9 @@ argument-hint: "[goal]"
 ---
 
 You done? Answer in three parts, terse. Read-only — no edits, no commits, no status
-changes. `$1` is an optional goal; without it, infer from evidence only.
+changes. `$1` is an optional goal; without it, infer from evidence only. No skill
+governs this report; the `backlog` skill covers its task lookups and `git-wt` its
+branch-name decoding.
 
 **1. Establish what was being worked on**
 Evidence, in order — `$1` overrides only when it's genuinely absent:

@@ -9,69 +9,45 @@ One approval gate. Never self-approve.
 **1. Load context**
 - `backlog task view $1 --plain` — always `--plain`; default is an interactive UI and
   will not render in a non-TTY session. If the task does not exist, stop and say so.
-- Read the `dig` skill. It governs this prompt.
+- Read the `dig` skill. It governs this prompt: its repro, hypothesis, falsification
+  and reconciliation method is the method here, followed as written.
 - `backlog instructions task-execution` before changing status or notes.
 - Status to In Progress now, before any probing:
   `backlog task edit $1 -s "In Progress"`. This is what makes an interrupted dig
   recoverable — the notes only help if the status says someone has it.
 
-**2. Reproduce and pin down the symptom**
-- Read what the task already carries: verbatim error, repro steps, `cause:` field.
-- Minimal, repeatable reproduction. Raise a flaky rate until it's debuggable — a 1% flake
-  is not, loop the trigger until it is.
+**2. Work the dig method against this task**
+- Start from what the task already carries: verbatim error, repro steps, `cause:` field.
+- Then the skill's loop, in order: reproduce and pin down the symptom, hypothesize in
+  visible output (falsifiable form, item by item), falsify fastest-first one variable
+  at a time, reconcile against the symptom's magnitude and shape before claiming
+  anything.
 - Cannot reproduce after honest effort: stop, report what was observed, return the task
   to To Do with `blocked: <what's missing>` in the notes. Do not hypothesize against a
   moving symptom.
+- No behavior-changing edit at any point — read-only probes only. That boundary is what
+  keeps this prompt's no-fix promise; the fix is `/st`'s job.
 
-**3. Hypotheses — visible output, no exceptions**
-- First principles: for this symptom to be true, what facts have to hold? Break it into
-  a chain of necessary conditions. Every link is a suspect.
-- Falsifiable form only: "if it's this, I see X; if not, Y." A hunch without a
-  falsification condition doesn't go on the list.
-- List item by item in the visible output before probing. The user must be able to
-  challenge the direction.
-- Always on the list: stale understanding of a dependency, the bug already being known,
-  and — for a recurring bug — how the last fix was applied (the fix may feed the problem).
-- Small, near-obvious problems: 2-3 items suffice. Root-cause reconciliation and
-  item-by-item verification are never exempted, regardless of scale.
-- Show the list, then continue. Do not wait for a reply, but do not compress it into one
-  throwaway line either.
+**3. Stream verdicts**
+As each hypothesis settles:
+`backlog task edit $1 --append-notes "- [hypothesis] verdict: <evidence>"`.
+The notes carry the hypothesis list and the three-strikes counter per the dig skill.
 
-**4. Falsify**
-- Design the observation that kills each hypothesis fastest, not the one that supports it.
-- One probe, one variable. Tag every debug log with a unique prefix — cleanup is one grep.
-- External evidence is a probe: search the dependency's portion of the error (strip
-  project identifiers first), check its issues and changelog for the installed version,
-  read the installed source. Facts, not memory.
-- Walk upstream: output ← computation ← input ← source, observation at each boundary,
-  until "correct" becomes "wrong."
-- Read-only probes, diagnostic scripts, and testability scaffolding don't count as fixes
-  and need no gate. Any behavior-changing edit stops this prompt — that's `/st`'s job.
-- Stream verdicts as they land:
-  `backlog task edit $1 --append-notes "- [hypothesis] verdict: <evidence>"`.
-  Keep the three-strikes counter in the notes. Three landed fixes that didn't fix it is
-  not this prompt's case (nothing lands here), but three dead-end probe rounds on the
-  same symptom means rebuild the understanding from step 2 or stop and ask.
+**4. The gate before you claim it**
+When the dig skill's reconciliation bar is met (evidence explains the symptom's
+magnitude and shape), one question via `ask_user`: root cause accepted, or dig further?
+Wait for the answer. A rejected claim returns to the skill's hypothesis step with the
+objection as a new suspect.
 
-**5. Root-cause reconciliation — the gate before you claim it**
-- Bar: evidence explains the symptom's magnitude and shape precisely. If the gap is 75,
-  find the 30 and the 45. Half a symptom explained is half a root cause — go back to 3.
-- Bias firewall: verifying or defending? Picked for evidence or recency? Looked for a
-  counterexample?
-- Then one question via `ask_user`: root cause accepted, or dig further? Wait for the
-  answer. A rejected claim returns to step 3 with the objection as a new suspect.
-
-**6. Record — only after approval**
+**5. Record — only after approval**
 - `backlog task edit $1 --notes "root cause: <one line — the mechanism, not the symptom>"`.
-- If the paste or notes carried secrets: scrub before writing. No tokens, passwords, or
-  personal data in notes.
-- Meta root cause, if seen: which missing defense (types, contracts, tests, review) let
-  it through. One line in the notes, named as separate work — do not create that task
-  here.
-- If the fix turns out trivial and cause was already obvious, say so — but still do not
-  apply it. `/st` takes it from here.
+- Scrub before writing: no tokens, passwords, or personal data in notes.
+- Meta root cause, if seen: which missing defense let it through — one line in the
+  notes, named as separate work. Do not create that task here.
+- If the fix turns out trivial and the cause was already obvious, say so — but still do
+  not apply it. `/st` takes it from here.
 
-**7. Report**
+**6. Report**
 Markdown, tight:
 
     **PI-0xx — <title>**
