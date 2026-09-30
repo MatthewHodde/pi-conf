@@ -11,7 +11,7 @@
 
 import { Type } from "@earendil-works/pi-ai";
 import { defineTool, type ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { DEFAULT_MAX_CHARS, fetchReadableText, type FetchResult } from "./web-retrieval-core.ts";
+import { DEFAULT_MAX_CHARS, fetchReadableText, type FetchResult } from "./lib/web-retrieval-core.ts";
 
 const CACHE_LIMIT = 20;
 

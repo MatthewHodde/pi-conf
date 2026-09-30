@@ -7,7 +7,7 @@ import {
   parsePublicUrl,
   resolvePublicUrl,
   truncate,
-} from "../web-retrieval-core.ts";
+} from "../lib/web-retrieval-core.ts";
 
 test("isPrivateAddress covers loopback, private, link-local, and metadata", () => {
   for (const blocked of [
@@ -156,4 +156,21 @@ test("non-HTML content is returned as-is rather than run through the HTML extrac
   const result = await fetchReadableText("https://example.com/data.json", { fetchImpl: impl });
   assert.equal(result.contentType, "application/json");
   assert.match(result.text, /"answer":42/);
+});
+
+// Pi loads every direct extensions/*.ts file as an extension, and fails the
+// whole load for a file without a default factory. Keep helper modules out of
+// the top level, and catch it here if one gets moved back.
+test("no top-level extension file lacks a default factory export", async () => {
+  const { readdir, readFile } = await import("node:fs/promises");
+  const { fileURLToPath } = await import("node:url");
+  const path = await import("node:path");
+  const dir = path.dirname(fileURLToPath(import.meta.url));
+  const offenders: string[] = [];
+  for (const name of await readdir(dir)) {
+    if (!name.endsWith(".ts")) continue;
+    const source = await readFile(path.join(dir, name), "utf8");
+    if (!/export\s+default\s+function/.test(source)) offenders.push(name);
+  }
+  assert.deepEqual(offenders, [], `move these out of extensions/ or add a default export: ${offenders.join(", ")}`);
 });
