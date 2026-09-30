@@ -20,16 +20,12 @@
     "npm:@0xkahi/pi-vim-keys",
     "npm:pi-ollama",
     "npm:pi-caveman",
-    "npm/node_modules/@0xkobold/pi-web",
     "npm:pi-mcp-extension",
     "npm:pi-web-search",
     "npm:pi-subagents",
     "npm:@patimweb/pi-mindplace"
   ],
-  "extensions": [
-    "~/.pi/agent/extensions/vim-keys-patches.ts",
-    "~/.pi/agent/extensions/backlog-guard.ts"
-  ],
+  "extensions": [],
   "showHardwareCursor": true,
   "hideThinkingBlock": true,
   "defaultTools": [
@@ -38,5 +34,42 @@
     "edit",
     "bash"
   ],
+  "subagents": {
+    "agentOverrides": {
+      "reviewer": {
+        "tools": [
+          "read",
+          "grep",
+          "find",
+          "ls",
+          "bash",
+          "watchdog_diff",
+          "contact_supervisor"
+        ]
+      },
+      "researcher": {
+        "tools": [
+          "read",
+          "write",
+          "grep",
+          "find",
+          "ls",
+          "bash",
+          "web_search",
+          "url_context"
+        ]
+      },
+      "evidence-auditor": {
+        "tools": [
+          "read",
+          "grep",
+          "find",
+          "ls",
+          "web_search",
+          "url_context"
+        ]
+      }
+    }
+  },
   "enabledModels": []
 }
