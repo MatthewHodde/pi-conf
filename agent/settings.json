@@ -56,7 +56,11 @@
           "ls",
           "bash",
           "web_search",
-          "url_context"
+          "fetch_content",
+          "get_search_content"
+        ],
+        "subagentOnlyExtensions": [
+          "~/.pi/agent/extensions/web-retrieval.ts"
         ]
       },
       "evidence-auditor": {
@@ -66,7 +70,11 @@
           "find",
           "ls",
           "web_search",
-          "url_context"
+          "fetch_content",
+          "get_search_content"
+        ],
+        "subagentOnlyExtensions": [
+          "~/.pi/agent/extensions/web-retrieval.ts"
         ]
       }
     }
