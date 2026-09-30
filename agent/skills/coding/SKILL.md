@@ -22,7 +22,7 @@ Every writing path starts with a plan, sized to stakes. A trivial change plans i
 
 The bar applies to every line of code. What varies is where memory can be trusted to meet it: actively verify on version-sensitive ground (a library's API surface, CLI flags, config schemas, anything deprecated-or-not, any question that contains "best practice"), because that is where confident recall goes stale first. Skip verifying stable knowledge (algorithms, settled syntax), facts sitting in the project (read them), and what the user already specified (use it).
 
-Search freely, and often first: it is frequently the fastest move. The source order below is about which answer wins when they conflict, not about earning the right to search. The project itself outranks everything, installed source, lockfile and changelog are the exact version in effect. Then official docs, version-matched to what is installed. For GitHub-hosted repos, DeepWiki MCP tools (`mcp_deepwiki_ask_question`, `mcp_deepwiki_read_wiki_structure`, `mcp_deepwiki_read_wiki_contents`) provide structured wiki access — use these before falling back to web search. Then the open web, read with discipline: recency and version beat search ranking, primary sources beat confident blogs, cross-check before committing, and never phrase the query to confirm what you already believe. When practices conflict, battle-tested survival beats benchmark results beats claims. When there is a lot to verify, send a background subagent rather than skipping.
+Search freely, and often first: it is frequently the fastest move. The source order below is about which answer wins when they conflict, not about earning the right to search. The project itself outranks everything, installed source, lockfile and changelog are the exact version in effect. Then official docs, version-matched to what is installed. For GitHub-hosted repos, DeepWiki MCP tools (`mcp_deepwiki_ask_question`, `mcp_deepwiki_read_wiki_structure`, `mcp_deepwiki_read_wiki_contents`) provide structured wiki access — use these before falling back to web search. Then the open web, read with discipline: recency and version beat search ranking, primary sources beat confident blogs, cross-check before committing, and never phrase the query to confirm what you already believe. When practices conflict, battle-tested survival beats benchmark results beats claims. When there is a lot to verify, budget the time to check it rather than skipping.
 
 A verified conclusion that supports the plan lands in the task document with its source attached.
 
@@ -38,7 +38,7 @@ Test behaviour through the public interface, never internals: a test that breaks
 
 When a test written after the fact passes on its first run, temporarily break the corresponding implementation path, watch the test go red, then restore. A test that cannot be made to fail no matter how you break the implementation is a bad test: delete it and rewrite.
 
-Where subagents exist and a spec exists, hand the acceptance criteria to an independent context that cannot see the implementation, and let it write the tests. The question-writer has nothing to copy from, so its tests encode what the code should do rather than what it did.
+Write tests from the spec, not from the implementation: hand the acceptance criteria to a fresh reading — ideally a separate session started after the spec exists and before the code does — so the question-writer has nothing to copy from, and its tests encode what the code should do rather than what it did.
 
 ## Pure refactor
 
@@ -48,7 +48,7 @@ A behaviour-preserving change has no failing test to write, so do not manufactur
 
 After refactor, before done: an adversarial pass over the diff. The reviewer's job is to find what blocks the merge, not to confirm it can.
 
-Where subagents exist, hand the diff to a fresh context that did not write it. Implementer blindness is bias (confirmation, sunk cost, overconfidence), not a capability gap, and a fresh reviewer beats any declared stance. It gets the diff, the intent (spec, commit message), and the three lenses. Without subagents, declare the stance switch and re-read at tool level: pull the diff again, check history, enumerate callers. Never judge from the memory of writing it.
+Review in a stance the implementation did not occupy. Implementer blindness is bias (confirmation, sunk cost, overconfidence), not a capability gap, so declare the stance switch and re-read at tool level: pull the diff again, check history, enumerate callers. Never judge from the memory of writing it.
 
 Three lenses. Every deletion: why did the removed thing exist, verified via history and callers, "cleanup" is a claim not evidence. Every new abstraction: born of the problem, or of the implementation path? Every change: who calls it beyond the diff, because the diff shows what changed, never what it affected. And one currency check: nothing new in the diff leans on a deprecated API or a superseded idiom.
 

@@ -22,7 +22,6 @@
     "npm:pi-caveman",
     "npm:pi-mcp-extension",
     "npm:pi-web-search",
-    "npm:pi-subagents",
     "npm:@patimweb/pi-mindplace"
   ],
   "extensions": [],
@@ -34,50 +33,5 @@
     "edit",
     "bash"
   ],
-  "subagents": {
-    "agentOverrides": {
-      "reviewer": {
-        "tools": [
-          "read",
-          "grep",
-          "find",
-          "ls",
-          "bash",
-          "watchdog_diff",
-          "contact_supervisor"
-        ]
-      },
-      "researcher": {
-        "tools": [
-          "read",
-          "write",
-          "grep",
-          "find",
-          "ls",
-          "bash",
-          "web_search",
-          "fetch_content",
-          "get_search_content"
-        ],
-        "subagentOnlyExtensions": [
-          "~/.pi/agent/extensions/web-retrieval.ts"
-        ]
-      },
-      "evidence-auditor": {
-        "tools": [
-          "read",
-          "grep",
-          "find",
-          "ls",
-          "web_search",
-          "fetch_content",
-          "get_search_content"
-        ],
-        "subagentOnlyExtensions": [
-          "~/.pi/agent/extensions/web-retrieval.ts"
-        ]
-      }
-    }
-  },
   "enabledModels": []
 }

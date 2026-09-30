@@ -68,10 +68,6 @@ git wt add -b "$BRANCH" "$BRANCH"
 - `--title` overrides the title when the backlog CLI is unavailable.
 - The name is fixed at creation. Never rename the branch afterwards, even if the task is
   retitled.
-- Delegated runs through pi-subagents: pass the id and slug as the run's `label`, which is
-  what pi-subagents builds the worktree branch from. It appends its own
-  `-<runId>-s<step>-t<index>` suffix after the label. Note that `label` doubles as the
-  run's display text, so the derived string is the trade-off when isolation is on.
 
 Full rules: `backlog/docs/worktree-branch-naming/`. Worktree *directory* names are out of
 scope — in git-wt layout the directory is the branch name and follows automatically.

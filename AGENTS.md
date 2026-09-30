@@ -36,15 +36,8 @@ node ~/.pi/agent/skills/git-wt/scripts/branch-name.mjs --task PI-026
 ```
 
 The name is fixed at creation and never renamed afterwards. Rules:
-`backlog/docs/worktree-branch-naming/`. For pi-subagents runs, pass the id and slug as the
-run's `label`.
+`backlog/docs/worktree-branch-naming/`.
 
 ## git-wt Compatibility
 
-This project uses pi-subagents for mindplace queries. git-wt (.bare style) repos work fine for mindplace.
-
-**Known limitation:** pi-subagents worktree isolation does not follow git-wt path convention when using native provider. Worktrees are created at `{parent}/worktrees/{repo}/pi-worktree-...` instead of git-wt's expected sibling layout `{project}/{branch}`.
-
-**Workaround:** Use `worktreeProvider: "native"` inside git-wt worktrees. mindplace works without worktree isolation.
-
-See PI-013 for full research notes.
+git-wt (.bare style) repos work fine for mindplace.

@@ -20,7 +20,7 @@ Start backlog task `$1` end to end.
 - Ask the user whether they want a review of the task before any work starts: gaps in the
   plan, stale assumptions, contradictions with this repo's conventions, and anything that
   looks wrong or underspecified. One question via `ask_user`, and wait for the answer.
-- If yes: run the `plan-review` skill inline (no subagents) — severity-ordered findings
+- If yes: run the `plan-review` skill inline — severity-ordered findings
   with a concrete proposed fix for each, then work with the user to resolve them. Apply
   accepted fixes to the task itself (description, plan, acceptance criteria via
   `backlog task edit $1`), and re-check that the plan is coherent before moving on.
@@ -55,9 +55,7 @@ Start backlog task `$1` end to end.
   stop and report it. Never guess, never write into a worktree you have not confirmed.
 - Record the branch and worktree path on the task with `--notes` so a later session can
   find the tree: `backlog task edit $1 --notes "branch=<...> worktree=<...>"`.
-- Do all coding work inside the worktree. When delegating through pi-subagents, use
-  `worktreeProvider: "native"` and pass the task id and slug as the run's `label`;
-  pi-subagents worktree isolation does not follow the git-wt sibling layout.
+- Do all coding work inside the worktree.
 
 **4. Execute**
 - Load the `coding` skill and follow it: new behavior and known-cause fixes go
@@ -66,8 +64,8 @@ Start backlog task `$1` end to end.
   whole branch diff: severity-ranked findings from its four lenses (every deletion
   justified via history and callers, every new abstraction born of the problem not the
   implementation, every change's callers beyond the diff, plus one currency check for
-  deprecated or superseded idioms). The skill runs inline in this session, no
-  subagents: it declares the stance switch and re-reads at tool level, so the review
+  deprecated or superseded idioms). The skill runs inline in this session: it declares
+  the stance switch and re-reads at tool level, so the review
   never runs on the memory of writing the code.
   Report acceptance-criteria findings separately from lens findings so one axis does not
   mask the other. This is the review of the code, not the plan review from step 2.
