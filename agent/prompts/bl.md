@@ -7,9 +7,9 @@ Show what is worth picking up right now from the backlog. The `backlog` skill go
 the CLI calls and carries the ready-set review standard this report judges against.
 
 **1. Gather**
+One chained bash call — both lists together:
 - `backlog task list --ready --status "To Do" --status "In Progress" --plain`
 - `backlog task list --ready --status Draft --plain` for the draft pool.
-- `backlog overview` for the counts.
 - An argument was typed (`$1`): it is a filter. Add `--search "$1"` to each
   `backlog task list` call and keep only matching tasks. The filter narrows what
   gets reported; it never edits anything.
