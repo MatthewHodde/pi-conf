@@ -1,6 +1,6 @@
 ---
 name: plan-review
-description: Single-context review of a plan before any work starts — no subagents. Severity-ranked findings over the plan's steps: gaps, unstated assumptions, contradictions with repo conventions, missing verification, sizing vs. stakes. Use when the user says review the plan, review this plan, critique the plan, plan review, or asks whether a plan is sound before execution starts. Do not trigger for reviewing completed work (adversarial-review's job), concept questions, or when the plan is still being shaped (shaping's job).
+description: "Single-context review of a plan before any work starts — no subagents. Severity-ranked findings over the plan's steps: gaps, unstated assumptions, contradictions with repo conventions, missing verification, sizing vs. stakes. Use when the user says review the plan, review this plan, critique the plan, plan review, or asks whether a plan is sound before execution starts. Do not trigger for reviewing completed work (adversarial-review's job), concept questions, or when the plan is still being shaped (shaping's job)."
 ---
 
 # plan-review: catch it before the worktree exists
