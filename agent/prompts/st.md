@@ -19,13 +19,15 @@ Start backlog task `$1` end to end.
 **2. Plan review — ask first, do not assume**
 - Ask the user whether they want a review of the task before any work starts: gaps in the
   plan, stale assumptions, contradictions with this repo's conventions, and anything that
-  looks wrong or underspecified. One question, and wait for the answer.
-- If yes: state the issues briefly, severity-ordered, with a concrete proposed fix for
-  each, then work with the user to resolve them. Apply accepted fixes to the task itself (description, plan, acceptance criteria via
+  looks wrong or underspecified. One question via `ask_user`, and wait for the answer.
+- If yes: run the `plan-review` skill inline (no subagents) — severity-ordered findings
+  with a concrete proposed fix for each, then work with the user to resolve them. Apply
+  accepted fixes to the task itself (description, plan, acceptance criteria via
   `backlog task edit $1`), and re-check that the plan is coherent before moving on.
 - If no, or the user declines to dig further: say so plainly and continue. Do not review
   uninvited, and do not re-ask.
-- Keep it brief. This is a sanity pass on the plan, not a redesign of it.
+- Keep it brief. This is a sanity pass on the plan, not a redesign of it — the skill's
+  verdict is input to step 2's discussion, not a gate of its own.
 
 **3. Worktree**
 - Derive the branch name, never type it by hand:
@@ -60,12 +62,13 @@ Start backlog task `$1` end to end.
 **4. Execute**
 - Load the `coding` skill and follow it: new behavior and known-cause fixes go
   red-green-refactor, and watch the failing test fail before implementing.
-- After refactor and before Gate 1, run the skill's adversarial review over the whole
-  branch diff: severity-ranked findings, three lenses (every deletion justified via
-  history and callers, every new abstraction born of the problem not the implementation,
-  every change's callers beyond the diff), plus one currency check for deprecated or
-  superseded idioms. Hand the diff to a fresh context that did not write it when
-  subagents are available; otherwise declare the stance switch and re-read at tool level.
+- After refactor and before Gate 1, run the `adversarial-review` skill over the
+  whole branch diff: severity-ranked findings from its four lenses (every deletion
+  justified via history and callers, every new abstraction born of the problem not the
+  implementation, every change's callers beyond the diff, plus one currency check for
+  deprecated or superseded idioms). The skill runs inline in this session, no
+  subagents: it declares the stance switch and re-reads at tool level, so the review
+  never runs on the memory of writing the code.
   Report acceptance-criteria findings separately from lens findings so one axis does not
   mask the other. This is the review of the code, not the plan review from step 2.
 - Commit as you go using the `conventional-commits` format. No `--no-verify`.
@@ -79,14 +82,14 @@ Start backlog task `$1` end to end.
 - Branch and worktree path.
 - Every commit on the branch, with subject line.
 - The test command and its actual output tail — the real result, not a summary.
-- The adversarial review findings from step 4, and their resolution.
+- The `adversarial-review` findings from step 4, and their resolution.
 - Each acceptance criterion from the task, with the file:line or commit that satisfies it.
 - Each Definition of Done item with its checked state; `backlog task view $1 --plain`
   renders the checklist, and task-level items override project defaults.
 - Anything you know is incomplete, skipped, or unverified. Strict on "satisfied", honest
   on "unverifiable".
 
-Ask for approval to merge. Wait. Do not merge, push, or mark the task Done until the user
+Ask for approval to merge via `ask_user`. Wait. Do not merge, push, or mark the task Done until the user
 says yes in this session.
 
 **6. Merge**
@@ -120,7 +123,7 @@ says yes in this session.
 
 **8. Gate 2 — approval before close**
 Present: merge commit sha, post-merge test output, and a final pass over the acceptance
-criteria. Then ask for approval to close.
+criteria. Then ask for approval to close via `ask_user`.
 
 - Only after explicit approval: `backlog instructions task-finalization`, check the
   acceptance criteria and the Definition of Done, write the final summary with
@@ -132,7 +135,7 @@ criteria. Then ask for approval to close.
 - Remove the worktree and the local branch, in that order. Preview first
   (`git worktree remove --dry-run` where supported, or `git wt remove <branch> --dry-run`
   in a bare layout — `git wt remove` is the right tool here, it does not fetch), show the
-  user what would be deleted, and act only after they say yes.
+  user what would be deleted, and act only after they confirm via `ask_user`.
 - Never delete the remote branch. This repo is local first and push is the host's job.
 - If the worktree has uncommitted changes, stop and report instead of forcing removal.
 - Report what was removed, and note on the task that the branch is gone.
