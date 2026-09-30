@@ -10,8 +10,7 @@ Custom extensions, skills, and patches for the Pi coding agent.
 │   └── patches/         # .patch files for npm packages
 ├── skills/              # Custom skill definitions
 ├── npm/                 # Installed npm packages
-│   ├── node_modules/
-│   └── patches/         # .patch files for @0xkobold/pi-web
+│   └── node_modules/
 ├── cache/               # Persisted config (e.g. pi-ollama-config.json)
 ├── sessions/            # Session state
 ├── settings.json        # Main pi config
@@ -144,27 +143,32 @@ Re-run after `pi install` or `pi update`.
 
 ### Current patches
 
-#### pi-superpowers-plus v0.4.1
+All patches live in `extensions/patches/` and are applied by the script above.
+Dry-run status should read `ALREADY applied` for every entry.
 
-**File:** `extensions/patches/pi-superpowers-plus+0.4.1.patch`
+#### @0xkahi/pi-vim-keys escape-abort
 
-Adds `/phase-complete` command to workflow-monitor. Marks current phase complete and triggers transition prompt.
+**File:** `extensions/patches/0xkahi+pi-vim-keys+escape-abort.patch`
 
-#### @0xkobold/pi-web v0.2.0
+Checks app action keybindings (e.g. alt+escape → `app.interrupt`) before the vim
+modal layer swallows the key.
 
-**File:** `npm/patches/0xkobold+pi-web+0.2.0.patch`
+#### pi-caveman v1.0.8
 
-Guards L3 Playwright rendering behind `use_playwright` flag. Without this, cascade always attempts `playwrightFetch()` even when `usePlaywright=false`, causing failed imports on environments without a browser (e.g. smolvm sandbox).
+**File:** `extensions/patches/jonjonrankin+pi-caveman+1.0.8.patch`
 
-### Manual patches
+Status-bar label for the active caveman level.
 
-#### pi-ollama host config
+### Removed patches
 
-**Doc:** `extensions/pi-ollama-host-patch.md`
-
-Makes `pi-ollama` read Ollama server URL from `~/.pi/agent/cache/pi-ollama-config.json` instead of only `OLLAMA_HOST` env var. Must be re-applied after `pi install npm:pi-ollama` or `pi update`.
-
-**Resolution order:** `OLLAMA_HOST` env → persisted `baseUrl` → `localhost:11434`
+- `0xkobold+pi-web` — package uninstalled (stale since PI-028).
+- `pi-ollama+0.1.7` — the host-config change it carried (read
+  `~/.pi/agent/cache/pi-ollama-config.json`, resolution order `OLLAMA_HOST` env →
+  persisted `baseUrl` → `localhost:11434`) is **native in pi-ollama 0.2.0**
+  (`src/config.ts`); the patch conflicted against the newer version and was deleted
+  2026-09-30. Nothing to re-apply after `pi update`.
+- `pi-superpowers-plus` — was listed in this README but its patch file never existed
+  in `extensions/patches/`; entry removed.
 
 ---
 
