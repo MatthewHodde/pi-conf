@@ -3,21 +3,21 @@ description: Show what we can work on from the backlog
 argument-hint: "[filter]"
 ---
 
-Show what is worth picking up right now from the backlog.
+Show what is worth picking up right now from the backlog. The `backlog` skill governs
+the CLI calls and carries the ready-set review standard this report judges against.
 
 **1. Gather**
 - `backlog task list --ready --status "To Do" --status "In Progress" --plain`
 - `backlog task list --ready --status Draft --plain` for the draft pool.
 - `backlog overview` for the counts.
+- An argument was typed (`$1`): it is a filter. Add `--search "$1"` to each
+  `backlog task list` call and keep only matching tasks. The filter narrows what
+  gets reported; it never edits anything.
 
 **2. Shortlist**
-From the ready set, pick the tasks that are actually startable today. Judge each one:
-
-- Real acceptance criteria, or at least a description concrete enough to plan against.
-- Dependencies satisfied, not merely absent.
-- Not already in flight (`In Progress` means someone or something has it).
-- Scope fits one branch and one worktree. A task that wants three subsystems is not
-  ready, it needs splitting. Say so instead of recommending it.
+Judge every task in the ready set against the `backlog` skill's ready-set review
+standard. Top 5 max here: show the startable ones, say how many were cut, and call out
+tasks that need splitting instead of recommending them.
 
 **3. Report**
 
@@ -65,8 +65,8 @@ Finish with a single recommendation, written as bullets, not prose and not a tab
     - Start with: reproducing the failure, then red-green per the coding skill
     - Run `/st PI-012` when you agree
 
-    ${1:-Prefer the highest priority ready task with the clearest acceptance criteria over
-    anything merely urgent. Breaks you can reproduce beat investigations you have to scope.}
+    Prefer the highest priority ready task with the clearest acceptance criteria over
+    anything merely urgent. Breaks you can reproduce beat investigations you have to scope.
 
 One task only. Do not offer a runner-up.
 

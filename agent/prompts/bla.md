@@ -4,20 +4,21 @@ argument-hint: "[filter]"
 ---
 
 Show the complete backlog picture, every ready task, no cap. Same review standard as
-`/bl` without the top-5 truncation.
+`/bl` without the top-5 truncation. The `backlog` skill governs the CLI calls and
+carries the ready-set review standard this report judges against.
 
 **1. Gather**
 - `backlog task list --ready --status "To Do" --status "In Progress" --plain`
 - `backlog task list --ready --status Draft --plain` for the draft pool.
 - `backlog overview` for the counts.
+- An argument was typed (`$1`): it is a filter. Add `--search "$1"` to each
+  `backlog task list` call and keep only matching tasks. The filter narrows what
+  gets reported; it never edits anything.
 
-**2. Judge each candidate**
-
-- Real acceptance criteria, or at least a description concrete enough to plan against.
-- Dependencies satisfied, not merely absent.
-- Not already in flight (`In Progress` means someone or something has it).
-- Scope fits one branch and one worktree. A task that wants three subsystems is not
-  ready, it needs splitting. Say so instead of recommending it.
+**2. Shortlist**
+Judge every task in the ready set against the `backlog` skill's ready-set review
+standard. List every ready task in READY NOW, however many there are. Nothing hidden,
+nothing cut. Length is not a reason to omit a task; if the output is long it is long.
 
 **3. Report**
 
@@ -52,9 +53,6 @@ rows line up across every table.
 Empty sections get one line of prose saying there are none, not an empty table.
 Use `—` for a field you do not know rather than guessing.
 
-List every ready task in READY NOW, however many there are. Nothing hidden, nothing cut.
-Length is not a reason to omit a task; if the output is long it is long.
-
 Do not modify any task, change any status, or create anything. This is a read-only report
 and it ends with the report.
 
@@ -67,8 +65,8 @@ Finish with a single recommendation, written as bullets, not prose and not a tab
     - Start with: reproducing the failure, then red-green per the coding skill
     - Run `/st PI-012` when you agree
 
-    ${1:-Prefer the highest priority ready task with the clearest acceptance criteria over
-    anything merely urgent. Breaks you can reproduce beat investigations you have to scope.}
+    Prefer the highest priority ready task with the clearest acceptance criteria over
+    anything merely urgent. Breaks you can reproduce beat investigations you have to scope.
 
 One task only. Do not offer a runner-up.
 
