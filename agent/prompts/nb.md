@@ -4,7 +4,10 @@ argument-hint: "<error text or symptom>"
 ---
 
 Add a bug task to the backlog from what you pasted. Capture, don't investigate — no
-diagnosis in this prompt, the fix happens later under `/st`.
+diagnosis in this prompt, the fix happens later under `/st`. The `backlog` skill owns
+search, creation rules, the repro question, and the confirm-before-create question;
+the `workflow` skill's interaction policy applies as written. Entry point and
+sequence only.
 
 **1. Load context**
 - Read the `backlog` skill.
@@ -28,31 +31,24 @@ From the pasted text, pull out what is present — never invent what isn't:
 Scrub before anything goes further: no secrets, tokens, passwords, or personal data in
 the message or description. Replace with `***` and say you redacted.
 
-**4. Ask the missing minimum — one round only**
-If reproduction steps are absent, ask once via `ask_user`: what command/action triggers
-it, and whether it reproduces every time. One question, then proceed on whatever comes
-back — `repro: not confirmed` is an acceptable answer. Do not stall the report on a
-perfect repro, and do not ask a second round.
+**4. Repro** — the `backlog` skill's bug-intake question.
+Then proceed on whatever comes back; `repro: not confirmed` is an acceptable answer.
 
 **5. Draft the task**
-
 - **Title** — the error or symptom, one line. Not the fix.
 - **Description** — verbatim error, where, when, repro steps, expected vs actual,
   `cause: <stated | unknown>`.
 - **Acceptance criteria** — two axes:
   - the failing case now succeeds under the recorded repro (or `repro not yet
-    confirmed — must be established before fix` when step 4 came back empty),
+    confirmed — must be established before fix` when the repro question came back empty),
   - a regression test covering it, and no existing behavior regressed.
   Behavior, testable, no implementation steps.
 - **Type** `bug`, **priority** from stated impact only, **deps** only on real IDs.
 
-**6. Confirm once**
-Show the whole draft. One question via `ask_user`: create it or revise it. Wait for the
-answer. Do not create unprompted.
+**6. Confirm** — the `backlog` skill owns the create-or-revise question.
 
 **7. Create**
-- Only after explicit approval, one chained call — create, parse the new ID from its
-  output, re-read:
+- One chained call — create, parse the new ID from its output, re-read:
   `backlog task create "<title>" -d "<description>" --ac "<criterion>" ... --type bug --priority <pri> && backlog task view <ID> --plain`
   Add `--dep`, `-m`, `-l` only if justified.
 - Confirm the error text and every acceptance criterion survived the CLI round-trip

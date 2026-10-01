@@ -49,7 +49,11 @@ a file pointing at `./.bare`, and branch worktrees are sibling directories.
   `git pull` when the network path is broken.
 - Prefer explicit, non-interactive commands. Avoid bare `git wt remove` and
   `git wt switch` in automation because they may open `fzf` pickers or prompts.
-- Use dry-runs before destructive cleanup. Only delete remote branches when the
+- Use dry-runs before destructive cleanup. Before removing a task worktree and its
+  local branch, preview the removal (dry-run), show the user in the reply exactly
+  what would be deleted, and proceed only after they confirm in plain discussion —
+  never via the `ask_user` tool. Never remove a worktree with uncommitted changes:
+  stop and report instead of forcing removal. Only delete remote branches when the
   user explicitly asks for remote deletion.
 - `DEBUG=1` before a mutating command prints the underlying `git` operations
   instead of executing them.

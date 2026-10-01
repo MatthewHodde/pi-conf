@@ -6,8 +6,11 @@ description: "Single-context review of a plan before any work starts — no suba
 # plan-review: catch it before the worktree exists
 
 Review the plan, not the code — nothing is written yet, so every defect found here is
-free. Run inline, no subagents: ordinary tools (`read`, `bash`, `backlog`, `ask_user`)
-are all fair game. This is the review st.md step 2 points at.
+free. Run inline, no subagents: ordinary tools (`read`, `bash`, `backlog`) are all
+fair game. Feedback questions are plain discussion in the reply, never the
+`ask_user` tool. This is the review the workflow's entry point points at — when
+invoked from one, first ask in plain discussion whether the review is wanted at
+all; if not, do not review, do not re-ask.
 
 ## 1. Establish the artifact
 
@@ -59,7 +62,7 @@ is a finding.
 
 ## 5. Feedback points — ask, don't guess
 
-Use `ask_user` (one focused question, options listed) only for these:
+Ask one plain-discussion question (options listed in the reply) only for these:
 
 - **No plan text found where expected**: ask where the plan lives before concluding
   anything.
@@ -69,8 +72,8 @@ Use `ask_user` (one focused question, options listed) only for these:
   on the point the plan needs — ask which way to read it.
 
 Never ask: whether findings are correct (prove them from the text), merge/close
-approval (st.md owns those gates), or anything the task description already answers —
-read it first.
+approval (the `workflow` skill owns those gates), or anything the task description
+already answers — read it first.
 
 ## 6. Findings discipline
 

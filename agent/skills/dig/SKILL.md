@@ -51,6 +51,14 @@ Confirmation bar: **the evidence has to precisely explain the symptom's magnitud
 
 Before declaring a root cause, run the firewall: am I verifying the hypothesis, or defending it (confirmation bias)? Did I pick this hypothesis because of the evidence, or because I saw something similar recently (availability bias)? Have I actually looked for a counterexample?
 
+### Claiming the root cause
+
+When the confirmation bar is met, put the claim to the user in plain discussion —
+never the `ask_user` tool: root cause accepted, or dig further? Wait for the answer.
+A rejected claim returns to step 2 with the objection as a new suspect. Only after
+the answer: record the one-line mechanism in the task's notes and flip status back
+in a single invocation (the workflow entry point's record step).
+
 ## 5. Fix, and hold the regression line
 
 - Fix the source, not the point of consumption. When several places need the same kind of protection, fix the data contract or unify the boundary instead.
