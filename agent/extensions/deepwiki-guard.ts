@@ -9,9 +9,9 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
 const DEEPWIKI_TOOLS = [
-  "mcp_deepwiki_ask_question",
-  "mcp_deepwiki_read_wiki_structure",
-  "mcp_deepwiki_read_wiki_contents",
+  "mcp__deepwiki__ask_wiki_question",
+  "mcp__deepwiki__read_wiki_structure",
+  "mcp__deepwiki__read_wiki_contents",
 ];
 
 function detectDeepWiki(pi: ExtensionAPI): boolean {
@@ -28,9 +28,9 @@ function buildResearchContext(available: boolean): string {
       "1. Project itself (installed source, lockfile, changelog)",
       "2. Official docs (version-matched)",
       "3. DeepWiki MCP tools — preferred for public GitHub repos:",
-      "   - `mcp_deepwiki_ask_question` — natural language query against repo wiki",
-      "   - `mcp_deepwiki_read_wiki_structure` — table of contents for repo wiki",
-      "   - `mcp_deepwiki_read_wiki_contents` — read specific wiki pages",
+      "   - `mcp__deepwiki__ask_wiki_question` — natural language query against repo wiki",
+      "   - `mcp__deepwiki__read_wiki_structure` — table of contents for repo wiki",
+      "   - `mcp__deepwiki__read_wiki_contents` — read specific wiki pages",
       "4. Open web (with discipline)",
       "",
       "DeepWiki is free for public repos, no API key needed. Use it before falling back to web search.",
@@ -74,6 +74,9 @@ export default function (pi: ExtensionAPI) {
 
   // Inject research context into system prompt
   pi.on("before_agent_start", async (event) => {
+    // Re-detect here: MCP servers connect asynchronously after session_start,
+    // and the built-in MCP extension waits for direct servers on this event.
+    deepWikiAvailable = detectDeepWiki(pi);
     return {
       systemPrompt: event.systemPrompt + "\n\n" + buildResearchContext(deepWikiAvailable),
     };
