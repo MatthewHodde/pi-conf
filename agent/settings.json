@@ -20,7 +20,6 @@
     "npm:@0xkahi/pi-vim-keys",
     "npm:pi-ollama",
     "npm:pi-caveman",
-    "npm:pi-mcp-extension",
     "npm:pi-web-search",
     "npm:@patimweb/pi-mindplace"
   ],
@@ -31,7 +30,8 @@
     "read",
     "write",
     "edit",
-    "bash"
+    "bash",
+    "+codemode"
   ],
   "enabledModels": []
 }

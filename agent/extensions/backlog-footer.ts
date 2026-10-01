@@ -93,7 +93,6 @@ function findActiveTask(taskDir: string): ActiveTask | null {
 // ── Extension ──────────────────────────────────────────────────────────────────
 
 const WIDGET_KEY = "backlog";
-const FOOTER_REFRESH_MS = 50;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type UIContext = any;
@@ -124,13 +123,6 @@ export default function (pi: ExtensionAPI) {
     lastCtx.ui.setWidget(WIDGET_KEY, [text], { placement: "aboveEditor" });
   }
 
-  function scheduleWidgetRefresh() {
-    setTimeout(() => {
-      refreshActiveTask();
-      renderWidget();
-    }, FOOTER_REFRESH_MS);
-  }
-
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   pi.on("session_start", async (_event, ctx) => {
@@ -140,15 +132,6 @@ export default function (pi: ExtensionAPI) {
     if (taskDir) {
       refreshActiveTask();
       renderWidget();
-    }
-  });
-
-  // ── Refresh after MCP edits ───────────────────────────────────────────────
-
-  pi.on("tool_call", async (event) => {
-    // Refresh widget after any backlog MCP tool call
-    if (event.toolName.startsWith("mcp_backlog_")) {
-      scheduleWidgetRefresh();
     }
   });
 }

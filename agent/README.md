@@ -61,7 +61,6 @@ Monitors disk usage in smolvm sandboxes.
 | `pi-ask-user` | Interactive user prompts with structured options |
 | `pi-ollama` | Ollama LLM provider integration |
 | `pi-caveman` | Caveman mode ( terse responses ) |
-| `pi-mcp-extension` | MCP server support (backlog, deepwiki) |
 | `pi-web-search` | Provider-native `web_search` (keyless) |
 | `@patimweb/pi-mindplace` | Code knowledge graph (`mindplace_query`/`build`/`explain`) |
 

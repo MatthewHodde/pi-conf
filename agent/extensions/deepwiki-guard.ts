@@ -46,7 +46,7 @@ function buildResearchContext(available: boolean): string {
     "2. Official docs (version-matched)",
     "3. Open web (with discipline)",
     "",
-    "DeepWiki MCP tools are not available. If configured but not connected, check `/mcp` status.",
+    "DeepWiki MCP tools are not available.",
     "Fallback to web search for GitHub repo documentation.",
     "",
   ].join("\n");
