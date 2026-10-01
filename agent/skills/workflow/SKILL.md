@@ -5,11 +5,11 @@ description: The general coding-agent workflow — stages, the two approval gate
 
 # workflow: what we are doing
 
-Prompts are thin wrappers — entry, sequence, pointer to this skill. This skill is the
-runbook: stages, the two gates, reporting, failure stops. Domain skills (`backlog`,
-`git-wt`, `coding`, `dig`, `plan-review`, `adversarial-review`, `conventional-commits`)
-own how their stage is performed, including their own discussion questions. Nothing
-here may be overridden by a prompt.
+This skill is the runbook: stages, the two gates, reporting, failure stops.
+Domain skills (`backlog`, `git-wt`, `coding`, `dig`, `plan-review`,
+`adversarial-review`, `conventional-commits`) own how their stage is performed,
+including their own discussion questions. Nothing here may be overridden by a
+prompt.
 
 ## Stages
 
@@ -36,8 +36,9 @@ Never gated on approval, never a question. Stop and report; no asking, no retryi
 no improvising:
 
 - Red suite: do not ask for merge approval with a red suite. Fix first.
-- Merge or hook error — conflict, rejection, test failure, unexpected base state:
-  stop immediately, report the exact command, exit code, and full error output. Do
+- Merge or hook error — conflict, rejection, hook test failure, unexpected base
+  state — the merge command itself failing: stop immediately, report the exact
+  command, exit code, and full error output. Do
   not retry, abort, resolve, or use `--no-verify`. Leave the repository exactly as
   the failure left it; debugging is joint work from there.
 - Base behind or diverged vs its remote: report, the user decides. This repo is
@@ -96,8 +97,9 @@ push, or mark the task Done until the user says yes in this session.
 
 Present: merge commit sha, post-merge test output, and a final pass over the
 acceptance criteria. Then ask for approval to close — plain discussion. If
-post-merge tests fail, do not ask: report the failure, fix it on the branch, and
-return to Gate 1 with fresh evidence.
+post-merge tests fail, do not ask: report the failure, drop the merge (reset
+the base worktree to the pre-merge sha), fix the cause on the branch in the
+task worktree, then return to Gate 1 with fresh evidence.
 
 Only after explicit approval: the finalization mechanics in the `backlog` skill —
 task-finalization guide, one `backlog task edit <ID>` carrying every `--check-ac`
