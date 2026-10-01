@@ -63,7 +63,7 @@ Markdown, tight:
     - **PI-0xx** — <error/symptom>
     - Cause: <stated in error | unknown>, repro: <confirmed / not confirmed>
     - AC: <n> criteria, pri <x>
-    - Next: run `/dg PI-0xx` to find the root cause, `/st PI-0xx` to diagnose and fix
+    - Next: run `/st PI-0xx` to diagnose and fix
       in one pass, `/bl` to see the ready set
 
 Create ends here. Do not diagnose, do not fix, do not set In Progress.
