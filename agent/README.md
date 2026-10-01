@@ -78,6 +78,9 @@ Monitors disk usage in smolvm sandboxes.
   extension (PI-033, 2026-09-30, subagent cleanup). `web_search` returns results,
   not full page bodies — that tradeoff was accepted deliberately.
 - For GitHub repos prefer the deepwiki MCP tools (free, no key) before web search.
+- MCP servers are configured natively by pi 1.0 in `agent/mcp.json` (`deepwiki`,
+  `backlog`) — no MCP plugin; an extension registering `/mcp` would replace the
+  built-in support. Validate with `pi mcp list`, inspect with `/mcp` in-session.
 
 ---
 

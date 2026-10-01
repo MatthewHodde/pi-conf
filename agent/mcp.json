@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "deepwiki": {
+      "url": "https://mcp.deepwiki.com/mcp",
+      "description": "DeepWiki wiki Q&A and page reads for public GitHub repositories",
+      "exposure": "direct"
+    },
+    "backlog": {
+      "command": "backlog",
+      "args": ["mcp", "start"],
+      "description": "Backlog.md task management server (create, edit, search, close tasks)"
+    }
+  }
+}
