@@ -1,6 +1,6 @@
 ---
 name: adversarial-review
-description: Single-context adversarial review of a branch diff, plan, or implemented work — no subagents. Severity-ranked findings via four lenses (deletions, abstractions, callers, currency), acceptance criteria checked separately, merge verdict. Use when the user says adversarial review, review this diff, review the branch, or pre-merge review. Do not trigger for plan review before work starts (st.md step 2), concept questions, or when the user asks for parallel/multi-agent review.
+description: Single-context adversarial review of a branch diff, plan, or implemented work — no subagents. Severity-ranked findings via four lenses (deletions, abstractions, callers, currency), acceptance criteria checked separately, merge verdict. Use when the user says adversarial review, review this diff, review the branch, or pre-merge review. Do not trigger for plan review before work starts (the workflow entry point asks first), concept questions, or when the user asks for parallel/multi-agent review.
 ---
 
 # adversarial-review: one context, full tools, no delegation
@@ -92,7 +92,7 @@ choice only the user can make. Everywhere else, proceed without asking.
   (`git diff <base>...HEAD`) before writing the output. Lenses run against one
   consistent snapshot; fixes land between review and report, never mid-lens.
 
-Never ask for: merge or close approval (st.md owns those gates), findings the disk
+Never ask for: merge or close approval (the `workflow` skill owns those gates), findings the disk
 already proves, or choices with an obvious repo convention — check the convention.
 
 ## 7. Output

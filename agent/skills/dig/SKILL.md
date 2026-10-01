@@ -57,7 +57,9 @@ When the confirmation bar is met, put the claim to the user in plain discussion 
 never the `ask_user` tool: root cause accepted, or dig further? Wait for the answer.
 A rejected claim returns to step 2 with the objection as a new suspect. Only after
 the answer: record the one-line mechanism in the task's notes and flip status back
-in a single invocation (the workflow entry point's record step).
+in a single invocation (the workflow entry point's record step). The flip back is
+the point: In Progress marks an active session, and a finished dig has nobody
+working it.
 
 ## 5. Fix, and hold the regression line
 
