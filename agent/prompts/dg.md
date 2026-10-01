@@ -4,7 +4,8 @@ argument-hint: "<backlog-id>"
 ---
 
 Diagnose backlog task `$1` and stop at root cause. No fix, no worktree, no branch.
-One approval gate. Never self-approve.
+The `dig` skill owns the method and its claim question; the `workflow` skill's
+interaction policy applies as written. Entry point and sequence only.
 
 **1. Load context**
 - One chained call: `backlog task view $1 --plain && backlog instructions task-execution`.
@@ -32,18 +33,13 @@ One approval gate. Never self-approve.
 Append in batched rounds, not one call per hypothesis: whenever verdicts land, one
 invocation carrying them all, e.g.
 `backlog task edit $1 --append-notes "- [h1] verdict: <evidence>\n- [h2] verdict: <evidence>"`.
-The notes carry the hypothesis list and the three-strikes counter per the dig skill.
 Three dead-end probe rounds on the same symptom means rebuild the understanding from
-step 2's starting point, or stop and ask — the skill's counter counts landed fixes,
+step 2's starting point, or stop and discuss — the skill's counter counts landed fixes,
 which never happen here.
 
-**4. The gate before you claim it**
-When the dig skill's reconciliation bar is met (evidence explains the symptom's
-magnitude and shape), one question via `ask_user`: root cause accepted, or dig further?
-Wait for the answer. A rejected claim returns to the skill's hypothesis step with the
-objection as a new suspect.
+**4. Claim** — the `dig` skill's claim question.
 
-**5. Record — only after approval**
+**5. Record — only after the answer**
 - `backlog task edit $1 --notes "root cause: <one line — the mechanism, not the symptom>" -s "To Do"` —
   record and the return-to-To-Do flip in the same single invocation.
 - Scrub before writing: no tokens, passwords, or personal data in notes.
@@ -65,9 +61,5 @@ Markdown, tight:
     - [hypothesis] verdict lines from the notes
 
     **Next**: run `/st PI-0xx` to fix it.
-
-The task is already back in To Do with the root cause in its notes — step 5's single
-invocation did both. Diagnosis done, nobody working it now. In Progress is for active
-sessions; a finished dig is not one.
 
 Ends with the report. No fix, no worktree, no branch, no status beyond the flip back.

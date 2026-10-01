@@ -1,6 +1,6 @@
 ---
 name: adversarial-review
-description: Single-context adversarial review of a branch diff, plan, or implemented work — no subagents. Severity-ranked findings via four lenses (deletions, abstractions, callers, currency), acceptance criteria checked separately, merge verdict. Use when the user says adversarial review, review this diff, review the branch, or pre-merge review. Do not trigger for plan review before work starts (st.md step 2), concept questions, or when the user asks for parallel/multi-agent review.
+description: Single-context adversarial review of a branch diff, plan, or implemented work — no subagents. Severity-ranked findings via four lenses (deletions, abstractions, callers, currency), acceptance criteria checked separately, merge verdict. Use when the user says adversarial review, review this diff, review the branch, or pre-merge review. Do not trigger for plan review before work starts (the workflow entry point asks first), concept questions, or when the user asks for parallel/multi-agent review.
 ---
 
 # adversarial-review: one context, full tools, no delegation
@@ -8,7 +8,8 @@ description: Single-context adversarial review of a branch diff, plan, or implem
 Review the code, not the memory of writing it. Run inline — no subagents, no
 `/parallel-review`, no `workflowScript` review fans: one context owns the whole
 evidence chain, from `git diff` pull to verdict. Ordinary tools are all fair game:
-`bash`, `read`, `ask_user`, `backlog`.
+`bash`, `read`, `backlog`. Feedback questions are plain discussion in the reply,
+never the `ask_user` tool.
 
 ## 1. Establish the target
 
@@ -16,8 +17,9 @@ evidence chain, from `git diff` pull to verdict. Ordinary tools are all fair gam
   exists: `git rev-parse --abbrev-ref HEAD` for where we are, `git rev-parse <base>` for
   the target. The three-dot diff below resolves the merge-base itself.
 - If the base is genuinely ambiguous — multiple plausible targets, no backlog task to
-  name one, remote/local divergence that changes the diff — stop and `ask_user` which
-  base to review against. Do not pick silently; the whole review is relative to it.
+  name one, remote/local divergence that changes the diff — stop and ask in plain
+  discussion which base to review against. Do not pick silently; the whole review is
+  relative to it.
 - The whole diff: `git diff <base>...HEAD` (three-dot — merge-base, not endpoint).
   Stat first (`--stat`) for shape, then full text.
 - Uncommitted work is invisible to that diff. Check `git status --short` first: a dirty
@@ -73,7 +75,7 @@ Never merge this ranking into the lens findings: one axis masks the other.
 
 ## 6. Feedback points — ask, don't guess
 
-Use the `ask_user` tool (one focused question, options listed) when the review hits a
+Ask one plain-discussion question (options listed in the reply) when the review hits a
 choice only the user can make. Everywhere else, proceed without asking.
 
 - **Base branch ambiguous** (step 1): which base to diff against.
@@ -90,7 +92,7 @@ choice only the user can make. Everywhere else, proceed without asking.
   (`git diff <base>...HEAD`) before writing the output. Lenses run against one
   consistent snapshot; fixes land between review and report, never mid-lens.
 
-Never ask for: merge or close approval (st.md owns those gates), findings the disk
+Never ask for: merge or close approval (the `workflow` skill owns those gates), findings the disk
 already proves, or choices with an obvious repo convention — check the convention.
 
 ## 7. Output

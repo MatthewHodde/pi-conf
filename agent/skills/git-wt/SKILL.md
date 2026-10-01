@@ -47,9 +47,26 @@ a file pointing at `./.bare`, and branch worktrees are sibling directories.
   layout intact. `git wt list` still works afterward and shows the new worktree.
   `git wt update` also fetches unconditionally — fall back to plain `git fetch` /
   `git pull` when the network path is broken.
+
+  Plain (non-bare) layout — sibling directory of the repo root, never inside it:
+
+  ```shell
+  git worktree add -b "$BRANCH" "$ROOT/../$BRANCH" "$BASE"
+  ```
+
+  State the branch name before creating anything. If `$BRANCH` already exists as a
+  branch but has no worktree, stop and report. If a worktree already exists for this
+  branch, reuse it only after verifying it is the right tree: `git worktree list
+  --porcelain` must show that exact branch path, its `HEAD` must be on the branch,
+  and it must be on the correct base. Any mismatch means stop and report it. Never
+  guess, never write into a worktree you have not confirmed.
 - Prefer explicit, non-interactive commands. Avoid bare `git wt remove` and
   `git wt switch` in automation because they may open `fzf` pickers or prompts.
-- Use dry-runs before destructive cleanup. Only delete remote branches when the
+- Use dry-runs before destructive cleanup. Before removing a task worktree and its
+  local branch, preview the removal (dry-run), show the user in the reply exactly
+  what would be deleted, and proceed only after they confirm in plain discussion —
+  never via the `ask_user` tool. Never remove a worktree with uncommitted changes:
+  stop and report instead of forcing removal. Only delete remote branches when the
   user explicitly asks for remote deletion.
 - `DEBUG=1` before a mutating command prints the underlying `git` operations
   instead of executing them.

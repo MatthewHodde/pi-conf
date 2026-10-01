@@ -51,6 +51,18 @@ backlog task create "Add project search" \
   --ac "Tests cover task, document, and decision results"
 ```
 
+Before the create call, show the whole draft — title, description, acceptance
+criteria, type, priority, deps — and ask one plain-discussion question: create it
+or revise it? Wait for the answer. Never create unprompted. For a bug task with no
+reproduction steps, ask once what command or action triggers it and whether it
+reproduces every time, then proceed on whatever comes back — `repro: not
+confirmed` is an acceptable answer. One round only.
+
+Requirement specs and solution designs belong in the issue itself — a `## Spec`
+section in the description — not behind prose passed to `--doc` (the CLI splits
+that field on commas). Reserve a backlog document for a long standalone spec
+referenced by path.
+
 Use subtasks for work in one subsystem:
 ```bash
 backlog task create "Desktop application"
@@ -136,7 +148,7 @@ All items must be checked before requesting closure permission:
 
 - **Set task to In Progress before doing any work.** Before reading code, writing plans, or making changes: `backlog task edit PI-123 -s "In Progress" -a @agent`. No exceptions.
 - **Work must be committed before Done.** `-s "Done"` is blocked if uncommitted changes exist. Commit first using conventional commit format (see `conventional-commits` skill).
-- **Ask approval before finalization.** Use `ask_user` before running `-s "Done"`. Wait for explicit approval.
+- **Ask approval before finalization.** Present the final summary and AC status, ask for approval to close in plain discussion (the `workflow` skill's Gate 2), and wait for explicit approval before running `-s "Done"`.
 - **Never close without traceability.** Every closed task must have commit references and hashes in Final Summary.
 
 ### Additional Rules

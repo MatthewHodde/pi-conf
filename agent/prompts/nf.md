@@ -3,8 +3,11 @@ description: Shape a new feature and add it to the backlog
 argument-hint: "<feature idea>"
 ---
 
-Add a new feature task to the backlog. Shape first, create second — no task exists until
-the shape converges. Stop and wait at each gate. Never self-approve.
+Add a new feature task to the backlog. Shape first, create second — no task exists
+until the shape converges. The `shaping` skill owns the shape loop and its decision
+rounds; the `backlog` skill owns search, creation rules, and the
+confirm-before-create question; the `workflow` skill's interaction policy applies as
+written. Entry point and sequence only.
 
 **1. Load context**
 - Read the `shaping` skill and the `backlog` skill. Both govern this prompt.
@@ -12,41 +15,25 @@ the shape converges. Stop and wait at each gate. Never self-approve.
 **2. Search before shaping**
 - One chained call for the workflow guide and near neighbours:
   `backlog instructions task-creation && backlog search "$1" --plain && backlog task list --plain`.
-- Duplicate or strict subset of an existing task: stop, report the ID, offer to edit that
-  task instead. Do not create a second one.
+- Duplicate or strict subset of an existing task: stop, report the ID, offer to edit
+  that task instead. Do not create a second one.
 
 **3. Shape the intent — the `shaping` skill, inline**
 Feature idea: `$1`
 
-Read the skill and work it as written: gauge the gap and enter at the level that is
-actually missing; one real decision per round with recommendation, grounds, and
-overturning evidence; inversion lens never skipped — failure answers become the
-acceptance criteria; confirmed decisions recorded as they land; stop the moment no
-affordable action would change the deliverable.
+Work the skill as written.
 
 **4. Draft the task**
-Assemble from the converged shape only, following the `backlog` skill's creation rules:
+Assemble from the converged shape only, following the `backlog` skill's creation
+rules — title, description, acceptance criteria, type, priority, dependencies, and
+where specs and designs belong per that skill.
 
-- **Title** — one line, the change not the goal.
-- **Description** — the problem and the grounds.
-- **Acceptance criteria** — behavior, not implementation steps; the shaping skill's
-  inversion rule already fixes the two axes.
-- **Type** `feature`, **priority**, **dependencies** on real IDs only.
-- If the shape produced a requirement spec or solution design, it goes in `--doc` —
-  that field is the deliverable, not a dump of the conversation.
-
-**5. Confirm once — ask first, do not assume**
-Show the whole draft: title, description, acceptance criteria, priority, deps, doc.
-One question via `ask_user`: create it, revise it, or reopen the shape. Wait for the
-answer. Do not create on speculation. Reopened shape returns to step 3, not to a rewrite
-of the draft.
+**5. Confirm** — the `backlog` skill owns the create-or-revise question.
 
 **6. Create**
-- Only after explicit approval, one chained call — create, parse the new ID from its
-  output, attach the doc, re-read:
-  `backlog task create "<title>" -d "<description>" --ac "<criterion>" ... --type feature --priority <pri> && backlog task edit <ID> --doc "<content>" && backlog task view <ID> --plain`
-  Add `--dep`, `--milestone`, `-l` only where the shape justified them. There is no
-  `--doc` on create — the middle link attaches it.
+- One chained call — create, parse the new ID from its output, re-read:
+  `backlog task create "<title>" -d "<description>" --ac "<criterion>" ... --type feature --priority <pri> && backlog task view <ID> --plain`
+  Add `--dep`, `--milestone`, `-l` only where the shape justified them.
 - Report the ID and confirm every acceptance criterion survived the CLI round-trip
   (quoting eats backticks).
 

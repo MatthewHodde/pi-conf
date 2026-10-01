@@ -23,3 +23,14 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
 
 </CRITICAL_INSTRUCTION>
 <!-- BACKLOG.MD GUIDELINES END -->
+
+## Workflow conventions
+
+Prompt templates (`agent/prompts/`) are thin entry-point wrappers — entry, sequence,
+and delegation only. They never carry interaction rules: no asks, no approvals, no
+wait-for-reply text. The `workflow` skill is the single home of interaction policy:
+approval gates exist only for merge and close, everything else is a plain-discussion
+question owned by its domain skill, never the `ask_user` tool, and results go forward
+to the user in-conversation (task docs persist, never replace). Specs and designs
+belong in the backlog issue itself.
+
