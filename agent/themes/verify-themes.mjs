@@ -10,6 +10,7 @@ const SCHEMA_PATH =
 const THEME_FILES = ["light-distinct.json", "dark-distinct.json"];
 const MIN_CONTRAST = 4.5;
 const MIN_LIGHTNESS_DELTA = 0.05;
+const MIN_SEPARATION = 1.5;
 const TOOL_BG_KEYS = ["toolPendingBg", "toolSuccessBg", "toolErrorBg"];
 const USER_MESSAGE_TEXT_ROLES = ["mdHeading", "mdLink", "mdLinkUrl", "mdCode", "mdQuote", "mdQuoteBorder", "mdListBullet", "mdCodeBlock", "mdCodeBlockBorder", "mdHr", "syntaxComment", "syntaxKeyword", "syntaxFunction", "syntaxVariable", "syntaxString", "syntaxNumber", "syntaxType", "syntaxOperator", "syntaxPunctuation"];
 
@@ -271,6 +272,14 @@ for (const fileName of THEME_FILES) {
 		const roleRgb = parseColor(roleRaw);
 		const roleContrast = contrastRatio(roleRgb, userBg);
 		check("contrast", roleContrast >= MIN_CONTRAST, `${step}: WCAG contrast of colors.${role} (${roleRaw} -> ${hexOf(roleRgb)}) on colors.userMessageBg (${userBgRaw} -> ${hexOf(userBg)}) is ${roleContrast.toFixed(2)}, minimum ${MIN_CONTRAST}`);
+	}
+
+	// A role that hugs body text passes contrast yet looks like body text. Keep every panel role distinguishable.
+	for (const role of USER_MESSAGE_TEXT_ROLES) {
+		const roleRaw = resolved[role];
+		const roleRgb = parseColor(roleRaw);
+		const separation = contrastRatio(roleRgb, userText);
+		check("separation", separation >= MIN_SEPARATION, `${step}: contrast of colors.${role} (${hexOf(roleRgb)}) vs colors.userMessageText (${hexOf(userText)}) is ${separation.toFixed(2)}, minimum ${MIN_SEPARATION}`);
 	}
 
 	const userL = oklchOf(userBg).l;
