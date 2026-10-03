@@ -23,7 +23,8 @@
     "npm:pi-web-search",
     "npm:@patimweb/pi-mindplace",
     "npm:pi-subagents",
-    "npm:@whamp/pi-pstack"
+    "npm:@whamp/pi-pstack",
+    "npm:@narumitw/pi-btw"
   ],
   "extensions": [],
   "showHardwareCursor": true,
