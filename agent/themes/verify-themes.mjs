@@ -11,6 +11,7 @@ const THEME_FILES = ["light-distinct.json", "dark-distinct.json"];
 const MIN_CONTRAST = 4.5;
 const MIN_LIGHTNESS_DELTA = 0.05;
 const TOOL_BG_KEYS = ["toolPendingBg", "toolSuccessBg", "toolErrorBg"];
+const USER_MESSAGE_TEXT_ROLES = ["mdHeading", "mdLink", "mdLinkUrl", "mdCode", "mdQuote", "mdQuoteBorder", "mdListBullet", "mdCodeBlock", "mdCodeBlockBorder", "mdHr", "syntaxComment", "syntaxKeyword", "syntaxFunction", "syntaxVariable", "syntaxString", "syntaxNumber", "syntaxType", "syntaxOperator", "syntaxPunctuation"];
 
 const failures = [];
 function check(step, ok, message) {
@@ -218,6 +219,7 @@ const rows = [];
 
 for (const fileName of THEME_FILES) {
 	const step = fileName;
+	const failuresBeforeFile = failures.length;
 	let theme;
 	try {
 		theme = JSON.parse(readFileSync(join(THEME_DIR, fileName), "utf-8"));
@@ -250,7 +252,7 @@ for (const fileName of THEME_FILES) {
 			check("schema", false, `${step}: colors.${key} failed to parse: ${error.message}`);
 		}
 	}
-	if (failures.length) continue;
+	if (failures.length > failuresBeforeFile) continue;
 
 	const rgbOf = (key) => parseColor(resolved[key]);
 	const userBgRaw = resolved.userMessageBg;
@@ -263,6 +265,13 @@ for (const fileName of THEME_FILES) {
 	}
 	const contrast = contrastRatio(userText, userBg);
 	check("contrast", contrast >= MIN_CONTRAST, `${step}: WCAG contrast of colors.userMessageText (${userTextRaw} -> ${hexOf(userText)}) on colors.userMessageBg (${userBgRaw} -> ${hexOf(userBg)}) is ${contrast.toFixed(2)}, minimum ${MIN_CONTRAST}`);
+
+	for (const role of USER_MESSAGE_TEXT_ROLES) {
+		const roleRaw = resolved[role];
+		const roleRgb = parseColor(roleRaw);
+		const roleContrast = contrastRatio(roleRgb, userBg);
+		check("contrast", roleContrast >= MIN_CONTRAST, `${step}: WCAG contrast of colors.${role} (${roleRaw} -> ${hexOf(roleRgb)}) on colors.userMessageBg (${userBgRaw} -> ${hexOf(userBg)}) is ${roleContrast.toFixed(2)}, minimum ${MIN_CONTRAST}`);
+	}
 
 	const userL = oklchOf(userBg).l;
 	const deltas = {};
