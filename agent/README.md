@@ -88,6 +88,25 @@ block.
 Contract tests: `node agent/extensions/tests/test-agent-ste.mjs` and
 `node agent/extensions/tests/test-conventional-commits.mts`.
 
+### Interaction with caveman
+
+Both extensions append to the system prompt through `before_agent_start`. Pi
+chains handler results, so both blocks survive and the load order does not
+matter. The status bar uses separate keys, `caveman` and `ste`, so the two
+indicators coexist.
+
+Caveman changes output tokens only. It never touches a tool call, so it cannot
+weaken the agent-ste gates. Caveman example lines lint clean. Its bans on hedges
+and marketing words point the same way as the soft rules.
+
+The one friction is `style/contraction`, which reads hard. A reply with a
+contraction gets a ste-violation note. A write or a commit with a contraction
+blocks. Set the rule to `soft` in `.ste.json` if the notes chatter.
+
+Agent-ste never blocks a reply in normal mode. `/ste strict` sends replies
+through the `say` tool, where a hard fault blocks the call. Caveman text passes
+through the same gate.
+
 ### Web search & research
 
 - `web_search` is the workhorse: keyless, provider picked in `web-search.json`
