@@ -271,17 +271,28 @@ for (const fileName of THEME_FILES) {
 		deltas[key] = Math.abs(userL - toolL);
 		check("separation", deltas[key] >= MIN_LIGHTNESS_DELTA, `${step}: OKLCH lightness delta userMessageBg (${userL.toFixed(4)}) vs ${key} (${toolL.toFixed(4)}) is ${deltas[key].toFixed(4)}, minimum ${MIN_LIGHTNESS_DELTA}`);
 	}
-	rows.push({ theme: stem, userBgRaw, userBgHex: hexOf(userBg), userTextRaw, userTextHex: hexOf(userText), contrast, userL, deltas, minDelta: Math.min(...Object.values(deltas)) });
+	const titleText = rgbOf("toolTitle");
+	const titleContrasts = {};
+	for (const key of TOOL_BG_KEYS) {
+		const toolBg = rgbOf(key);
+		if (!titleText || !toolBg) {
+			check("title-contrast", false, `${step}: colors.toolTitle and colors.${key} must resolve to concrete colors`);
+			continue;
+		}
+		titleContrasts[key] = contrastRatio(titleText, toolBg);
+		check("title-contrast", titleContrasts[key] >= MIN_CONTRAST, `${step}: WCAG contrast of colors.toolTitle (${hexOf(titleText)}) on colors.${key} (${hexOf(toolBg)}) is ${titleContrasts[key].toFixed(2)}, minimum ${MIN_CONTRAST}`);
+	}
+	rows.push({ theme: stem, userBgRaw, userBgHex: hexOf(userBg), userTextRaw, userTextHex: hexOf(userText), contrast, userL, deltas, minDelta: Math.min(...Object.values(deltas)), minTitleContrast: Math.min(...Object.values(titleContrasts)) });
 }
 
-console.log("theme          userMessageBg (raw -> hex)            userMessageText (raw -> hex)   contrast  okL(userBg)  ΔL pending/success/error");
+console.log("theme          userMessageBg (raw -> hex)            userMessageText (raw -> hex)   contrast  titleC  okL(userBg)  ΔL pending/success/error");
 for (const row of rows) {
 	const bg = `${row.userBgRaw} -> ${row.userBgHex}`.padEnd(35);
 	const text = `${row.userTextRaw} -> ${row.userTextHex}`.padEnd(30);
 	const delta = `${row.deltas.toolPendingBg.toFixed(4)}/${row.deltas.toolSuccessBg.toFixed(4)}/${row.deltas.toolErrorBg.toFixed(4)}`;
-	console.log(`${row.theme.padEnd(14)} ${bg} ${text} ${row.contrast.toFixed(2).padStart(7)}  ${row.userL.toFixed(4).padStart(10)}  ${delta}`);
+	console.log(`${row.theme.padEnd(14)} ${bg} ${text} ${row.contrast.toFixed(2).padStart(7)}  ${row.minTitleContrast.toFixed(2).padStart(6)}  ${row.userL.toFixed(4).padStart(10)}  ${delta}`);
 }
-console.log(`checks: contrast >= ${MIN_CONTRAST}, each OKLCH lightness delta >= ${MIN_LIGHTNESS_DELTA}`);
+console.log(`checks: panel contrasts >= ${MIN_CONTRAST}, each OKLCH lightness delta >= ${MIN_LIGHTNESS_DELTA}`);
 
 if (failures.length) {
 	console.error(`\nFAILED (${failures.length} assertion${failures.length === 1 ? "" : "s"}):`);
