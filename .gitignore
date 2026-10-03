@@ -13,3 +13,4 @@
 /agent/run-history.jsonl
 /agent/tmp/
 /agent/fff/
+agent/bin/gitleaks
