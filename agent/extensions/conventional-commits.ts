@@ -80,7 +80,7 @@ export default function (pi: ExtensionAPI) {
   pi.on("tool_call", (event, ctx) => {
     if (event.toolName !== "bash") return;
 
-    const cmd = event.args?.command;
+    const cmd = event.input?.command;
     if (typeof cmd !== "string" || !cmd.includes("git commit")) return;
 
     // Extract -m message (handles single/double quotes, multiline)
@@ -91,7 +91,7 @@ export default function (pi: ExtensionAPI) {
     if (!result.ok) {
       ctx.ui.notify(`❌ Invalid commit:\n${result.error}`, "error");
       return {
-        blocked: true,
+        block: true,
         reason: `${result.error}\n\nSee skill:conventional-commits for format rules.`,
       };
     }

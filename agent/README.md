@@ -65,6 +65,28 @@ Monitors disk usage in smolvm sandboxes.
 | `pi-caveman` | Caveman mode ( terse responses ) |
 | `pi-web-search` | Provider-native `web_search` (keyless) |
 | `@patimweb/pi-mindplace` | Code knowledge graph (`mindplace_query`/`build`/`explain`) |
+| `agent-ste` | ASD-STE100 prose gate (writes, commit messages, replies) |
+
+### Prose gate (agent-ste)
+
+`agent-ste` checks every `write`, `edit`, `git commit -m` and reply against
+ASD-STE100. A hard fault blocks the tool call with the line, the column and the
+replacement word. A soft fault warns in the status bar. The reply layer notes
+faults and never blocks. `/ste` toggles it and `/ste strict` sends every reply
+through the `say` tool.
+
+Rule severities live in `.ste.json` at the repo root. The file names all twelve
+rules at their package defaults. A global file would sit at
+`$XDG_CONFIG_HOME/ste/config.json`. That path does not survive a smolvm restart,
+so this repo carries the only config. The project file wins for each rule it
+names.
+
+`conventional-commits.ts` stays the format gate for type, length and AI
+attribution. `agent-ste` is the prose gate. Both watch `git commit` and both can
+block.
+
+Contract tests: `node agent/extensions/tests/test-agent-ste.mjs` and
+`node agent/extensions/tests/test-conventional-commits.mts`.
 
 ### Web search & research
 

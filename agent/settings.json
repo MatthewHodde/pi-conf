@@ -24,7 +24,8 @@
     "npm:@patimweb/pi-mindplace",
     "npm:pi-subagents",
     "npm:@whamp/pi-pstack",
-    "npm:@narumitw/pi-btw"
+    "npm:@narumitw/pi-btw",
+    "npm:agent-ste"
   ],
   "extensions": [],
   "showHardwareCursor": true,
