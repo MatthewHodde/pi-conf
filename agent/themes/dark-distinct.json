@@ -35,7 +35,7 @@
 		"customMessageText": "muted",
 		"customMessageLabel": "violet",
 		"toolPendingBg": "#403E3C",
-		"toolSuccessBg": "#3D4C07",
+		"toolSuccessBg": "#164F4A",
 		"toolErrorBg": "#6C201C",
 		"toolTitle": "text",
 		"toolOutput": "muted",
