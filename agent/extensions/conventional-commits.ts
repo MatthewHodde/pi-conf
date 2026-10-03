@@ -1,4 +1,31 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import { execSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+
+const SCANNER = fileURLToPath(new URL("../bin/scan-secrets", import.meta.url));
+
+type ScanResult = { findings?: string; warning?: string };
+
+function scanSecrets(): ScanResult {
+  try {
+    execSync(`"${SCANNER}"`, {
+      cwd: process.cwd(),
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "pipe"],
+      timeout: 120_000,
+    });
+    return {};
+  } catch (err) {
+    const e = err as { status?: number | null; stdout?: string | Buffer };
+    if (e.status === 1) return { findings: String(e.stdout ?? "").trim() };
+    return {
+      warning:
+        e.status == null
+          ? "scanner missing or timed out"
+          : `scanner error (exit ${e.status})`,
+    };
+  }
+}
 
 const TYPES = "feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert";
 const PATTERN = new RegExp(`^(${TYPES})(\\([a-z0-9_-]+\\))?\\!?:\\ .+$`);
@@ -82,6 +109,17 @@ export default function (pi: ExtensionAPI) {
 
     const cmd = event.input?.command;
     if (typeof cmd !== "string" || !cmd.includes("git commit")) return;
+
+    const scan = scanSecrets();
+    if (scan.findings !== undefined) {
+      ctx.ui.notify(`❌ Secrets in commit set:\n${scan.findings}`, "error");
+      return {
+        block: true,
+        reason: `Secret scanner found secrets:\n${scan.findings}\n\nFix the files or drop them from the commit, then retry.`,
+      };
+    }
+    // A missing or broken scanner warns and does not stop the commit.
+    if (scan.warning) ctx.ui.notify(`⚠️ Secret scan skipped: ${scan.warning}`, "warning");
 
     // Extract -m message (handles single/double quotes, multiline)
     const match = cmd.match(/git commit[^"']*-(?:m\s+)(["'])([\s\S]*?)\1/);

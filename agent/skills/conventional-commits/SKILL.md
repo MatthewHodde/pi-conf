@@ -133,13 +133,15 @@ Before committing, verify:
 
 When creating a commit:
 
-1. Inspect the changes to understand what changed
-2. Identify the primary change type
-3. Select appropriate type and scope
-4. Write concise commit message
-5. Include body only when the *why* is not visible in the diff
-6. Include footer for breaking changes or issue references
-7. Strip any tool, model, or assistant attribution from the message
+1. Run `agent/bin/scan-secrets` before the commit and stop on a non-zero exit.
+   Report each `file:line rule-id` finding as evidence, then fix the file first.
+2. Inspect the changes to understand what changed
+3. Identify the primary change type
+4. Select appropriate type and scope
+5. Write concise commit message
+6. Include body only when the *why* is not visible in the diff
+7. Include footer for breaking changes or issue references
+8. Strip any tool, model, or assistant attribution from the message
 
 When reviewing a commit message:
 
