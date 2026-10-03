@@ -4,7 +4,10 @@ import { fileURLToPath } from "node:url";
 
 const SCANNER = fileURLToPath(new URL("../bin/scan-secrets", import.meta.url));
 
-type ScanResult = { findings?: string; warning?: string };
+type ScanResult =
+  | { kind: "clean" }
+  | { kind: "findings"; findings: string }
+  | { kind: "error"; reason: string };
 
 function scanSecrets(): ScanResult {
   try {
@@ -14,16 +17,21 @@ function scanSecrets(): ScanResult {
       stdio: ["ignore", "pipe", "pipe"],
       timeout: 120_000,
     });
-    return {};
+    return { kind: "clean" };
   } catch (err) {
-    const e = err as { status?: number | null; stdout?: string | Buffer };
-    if (e.status === 1) return { findings: String(e.stdout ?? "").trim() };
-    return {
-      warning:
-        e.status == null
-          ? "scanner missing or timed out"
-          : `scanner error (exit ${e.status})`,
+    const e = err as {
+      status?: number | null;
+      stdout?: string | Buffer;
+      stderr?: string | Buffer;
     };
+    if (e.status === 1)
+      return { kind: "findings", findings: String(e.stdout ?? "").trim() };
+    const reason =
+      e.status == null
+        ? "scanner missing or timed out"
+        : `scanner error (exit ${e.status})`;
+    const tail = String(e.stderr ?? "").trim().slice(0, 200);
+    return { kind: "error", reason: tail ? `${reason}: ${tail}` : reason };
   }
 }
 
@@ -111,15 +119,20 @@ export default function (pi: ExtensionAPI) {
     if (typeof cmd !== "string" || !cmd.includes("git commit")) return;
 
     const scan = scanSecrets();
-    if (scan.findings !== undefined) {
+    if (scan.kind === "findings") {
       ctx.ui.notify(`❌ Secrets in commit set:\n${scan.findings}`, "error");
       return {
         block: true,
         reason: `Secret scanner found secrets:\n${scan.findings}\n\nFix the files or drop them from the commit, then retry.`,
       };
     }
-    // A missing or broken scanner warns and does not stop the commit.
-    if (scan.warning) ctx.ui.notify(`⚠️ Secret scan skipped: ${scan.warning}`, "warning");
+    if (scan.kind === "error") {
+      ctx.ui.notify(`❌ Secret scan failed: ${scan.reason}`, "error");
+      return {
+        block: true,
+        reason: `Secret scan failed: ${scan.reason}\n\nFix or restore the scanner, then retry.`,
+      };
+    }
 
     // Extract -m message (handles single/double quotes, multiline)
     const match = cmd.match(/git commit[^"']*-(?:m\s+)(["'])([\s\S]*?)\1/);
