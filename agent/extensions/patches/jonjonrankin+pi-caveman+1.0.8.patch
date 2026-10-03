@@ -1,5 +1,5 @@
---- a/node_modules/pi-caveman/extensions/caveman.ts	2026-09-04 19:57:30.601337101 +0000
-+++ b/node_modules/pi-caveman/extensions/caveman.ts	2026-09-08 15:38:40.418219564 +0000
+--- a/node_modules/pi-caveman/extensions/caveman.ts
++++ b/node_modules/pi-caveman/extensions/caveman.ts
 @@ -244,22 +244,7 @@
  		}
  

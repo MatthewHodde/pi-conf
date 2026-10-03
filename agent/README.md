@@ -6,7 +6,9 @@ Custom extensions, skills, and patches for the Pi coding agent.
 
 ```
 ~/.pi/agent/
-├── extensions/          # Custom .ts extensions + patch apply script
+├── extensions/          # Custom .ts extensions + patch apply/regen scripts
+│   ├── apply-all-patches.sh  # apply all patches (run after pi install/update)
+│   ├── regen-patch.sh        # rebuild a patch from pristine sources
 │   └── patches/         # .patch files for npm packages
 ├── skills/              # Custom skill definitions
 ├── npm/                 # Installed npm packages
@@ -143,14 +145,35 @@ bash ~/.pi/agent/extensions/apply-all-patches.sh --check
 
 Re-run after `pi install` or `pi update`.
 
+Naming: `<owner>+<pkg>+<version>+<desc>.patch` — version pins tell you which
+install the patch was built against; a version bump means CONFLICT until regenerated.
+
+### Regenerating a patch
+
+A patch diffs **pristine package file (registry tarball) → live modified copy** in
+`~/.pi/agent/npm/`. After an upgrade overwrites the modification:
+
+```bash
+bash ~/.pi/agent/extensions/apply-all-patches.sh --check   # 1. see CONFLICT / FAILED
+#                                      2. re-apply the patch's intent by hand
+bash ~/.pi/agent/extensions/regen-patch.sh <patch-file>    # 3. rebuild + verify
+bash ~/.pi/agent/extensions/apply-all-patches.sh --check   # 4. ALREADY applied
+```
+
+`regen-patch.sh` downloads the tarball pinned in `package-lock.json` and checks its
+sha512 against the lockfile `integrity` field — the pristine side is always real registry
+bytes, so a wrong or inverted input can't produce a backwards patch. It rewrites the
+patch only after proving pristine + patch == live. `package-lock.json` targets have no
+tarball — npm rewrites the entry on install, so the lock patch applies on its own.
+
 ### Current patches
 
 All patches live in `extensions/patches/` and are applied by the script above.
 Dry-run status should read `ALREADY applied` for every entry.
 
-#### @0xkahi/pi-vim-keys escape-abort
+#### @0xkahi/pi-vim-keys 1.1.2 escape-abort
 
-**File:** `extensions/patches/0xkahi+pi-vim-keys+escape-abort.patch`
+**File:** `extensions/patches/0xkahi+pi-vim-keys+1.1.2+escape-abort.patch`
 
 Checks app action keybindings (e.g. alt+escape → `app.interrupt`) before the vim
 modal layer swallows the key.
@@ -160,6 +183,18 @@ modal layer swallows the key.
 **File:** `extensions/patches/jonjonrankin+pi-caveman+1.0.8.patch`
 
 Status-bar label for the active caveman level.
+
+#### @whamp/pi-pstack 0.9.1 typebox → peerDependencies
+
+**Files:** `extensions/patches/whamp+pi-pstack+0.9.1+typebox-peer.patch`
+(manifest) and `extensions/patches/whamp+pi-pstack+0.9.1+typebox-peer-lock.patch`
+(`package-lock.json`). Split per file so a lock-only conflict can't block the manifest fix.
+
+Silences the extension-loader warning `Host-provided extension packages must be
+declared in peerDependencies with a "*" range, not dependencies: typebox.` — pi
+bundles typebox (1.3.27) and aliases it into extensions; the pinned `dependencies`
+entry hoisted a second copy (1.3.7). Manifest change alone clears the warning (it
+reads only `dependencies`); the lock change keeps `npm ls` consistent.
 
 ### Removed patches
 
@@ -226,5 +261,6 @@ Projects with auto-trusted tool execution.
 ### Patches not applying
 
 1. Run `bash ~/.pi/agent/extensions/apply-all-patches.sh --check` to see status
-2. If CONFLICT, check if package was updated and patch needs refresh
+2. If CONFLICT, package was updated — re-apply the intent by hand, then
+   `bash ~/.pi/agent/extensions/regen-patch.sh <patch-file>` to rebuild it
 3. Re-run without `--check` to apply
