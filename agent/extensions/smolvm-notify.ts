@@ -3,13 +3,13 @@
  *
  * Writes agent state to /tmp/smolvm/state for host-side notification daemon.
  * Only active when SMOLVM env var is set (running inside smolvm).
- * States: idle, working, need-input
+ * States: idle, working, blocked
  *
  * Events:
  *   session_start   → idle
  *   agent_start     → working
  *   agent_settled   → idle
- *   ui_prompt_start → need-input
+ *   ui_prompt_start → blocked
  *   ui_prompt_end   → working
  *   session_shutdown → idle
  */
@@ -53,7 +53,7 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.on("ui_prompt_start", async (event) => {
-    writeState("need-input");
+    writeState("blocked");
     ringBell();
   });
 

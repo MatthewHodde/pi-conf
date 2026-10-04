@@ -43,7 +43,7 @@ Detects smolvm sandbox environment and adapts behavior.
 
 Writes agent state to `/tmp/smolvm/state` for host-side notification daemon.
 
-- States: `idle`, `working`, `need-input`
+- States: `idle`, `working`, `blocked`
 - Events: `session_start`, `agent_start`, `agent_settled`, `ui_prompt_start`, `ui_prompt_end`, `session_shutdown`
 
 #### disk-pressure.ts
