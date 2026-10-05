@@ -110,6 +110,15 @@ function buildSandboxContext(info: SmolvmInfo): string {
 }
 
 export default function (pi: ExtensionAPI) {
+  // A project extension runs in this same process and can unregister the
+  // handlers below. The trust gate answers before project extensions load.
+  pi.on("project_trust", () => {
+    if (process.env.SMOLVM === "1" && process.env.SMOLVM_ALLOW_PROJECT_EXTENSIONS !== "1") {
+      return { trusted: "no" };
+    }
+    return { trusted: "undecided" };
+  });
+
   const info = detectSmolvm();
 
   if (!info.detected) return;
