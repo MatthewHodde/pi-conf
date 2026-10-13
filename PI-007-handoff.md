@@ -22,7 +22,8 @@ Hooks still can not reach the host tmux socket from inside the VM.
 1. tap mechanism. Hooks call `tap state`, which writes `@agent_state` on
    `$TMUX_PANE`. It needs the host tmux socket. The VM has no tmux binary and
    no socket. Calls from inside the VM are silent no-ops. The pane-title
-   fallback works for Claude Code only.
+   fallback works for Claude Code only. This repo now sets the title from
+   the guest through `backlog-title.ts`, so the title crosses the boundary.
 2. Host facts. tmux 3.7b, socket `/tmp/tmux-1000/default`. One pane: title
    `π - .pi` (U+03C0 prefix), `pane_current_command` = `bash`. pi writes an
    OSC title from inside the VM. The escape sequence crosses to host tmux.
@@ -46,7 +47,8 @@ Hooks still can not reach the host tmux socket from inside the VM.
    - Fix B: patch agenmux. Add a title-identity key. `pi.conf` gets `^π - `.
 3. Verify live. Run `ps -ef | grep -E 'pi|smolvm'` on the host. Confirm the
    agenmux sidebar shows working and blocked states on a real pane.
-4. Record the tap verdict: rejected, needs a bridge. agenmux path chosen.
+4. Record the verdict that the Verdict section above states. The first
+   version of this file rejected the bridge. That rejection is superseded.
 
 ## Rejected
 
