@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Keep tuicr review JSON inside the repo that gets reviewed.
+# Global XDG_DATA_HOME would move data for every tool, so scope it here only.
+set -euo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+real="$here/tuicr.real"
+
+if [[ -n "${TUICR_BIN:-}" ]]; then
+  real="$TUICR_BIN"
+else
+  real="$here/tuicr.real"
+fi
+
+if [[ ! -x "$real" ]]; then
+  # Session-only installs land in the mise store, not next to this shim.
+  mise_dir="${MISE_DATA_DIR:-$HOME/.local/share/mise}/installs/github-agavra-tuicr"
+  # Version dirs are semver plus a latest symlink, so ls ordering is safe here.
+  # shellcheck disable=SC2012
+  real="$(ls -t "$mise_dir"/*/tuicr 2>/dev/null | head -n 1 || true)"
+fi
+
+if [[ -z "$real" || ! -x "$real" ]]; then
+  echo "tuicr shim: real binary not found" >&2
+  echo "tuicr shim: put tuicr.real next to this shim, set TUICR_BIN, or run: mise install github:agavra/tuicr" >&2
+  exit 127
+fi
+
+root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+data_home="$root/.cache"
+
+mkdir -p "$data_home"
+XDG_DATA_HOME="$data_home" exec "$real" "$@"
