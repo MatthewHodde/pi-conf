@@ -1,9 +1,16 @@
+import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import extension, {
   changeFor,
   defaultTitle,
   nextTitle,
   parseEditCommand,
 } from "../backlog-title.ts";
+
+// The claim file must land in a fixture, never in the live sandbox folder.
+const signalDir = mkdtempSync(join(tmpdir(), "backlog-title-signal-"));
+process.env.SMOLVM_SIGNAL_PATH = signalDir;
 
 let failed = 0;
 function check(name: string, cond: boolean, got?: unknown) {
@@ -189,6 +196,42 @@ check("each instance tracks its own task", same(a.titles, ["TASK-017.01"]) && sa
   a: a.titles,
   b: b.titles,
 });
+
+// AC11: a restarted pane gets its ticket back from the claim file
+function claimProject(id: string, status: string) {
+  const project = mkdtempSync(join(tmpdir(), "backlog-title-project-"));
+  mkdirSync(join(project, "backlog/tasks"), { recursive: true });
+  writeFileSync(join(project, "backlog/config.yml"), 'statuses: ["To Do", "In Progress", "Done"]\n');
+  writeFileSync(
+    join(project, `backlog/tasks/${id.toLowerCase()} - claim test.md`),
+    ["---", `id: ${id}`, "title: claim test", `status: \"${status}\"`, "---", ""].join("\n"),
+  );
+  return project;
+}
+
+process.env.PROJECT_PATH = claimProject("PI-017.01", "In Progress");
+writeFileSync(join(signalDir, "task"), "PI-017.01\n");
+
+const restarted = boot();
+await restarted.emit("session_start", { type: "session_start" });
+check("restart restores the claimed task as title", same(restarted.titles, ["PI-017.01"]), restarted.titles);
+
+await restarted.bashEdit("PI-017.01", "Done");
+check(
+  "the restored claim still owns the title until the task finishes",
+  same(restarted.titles, ["PI-017.01", "π - proj"]),
+  restarted.titles
+);
+
+writeFileSync(join(signalDir, "task"), "PI-999.99\n");
+const stale = boot();
+await stale.emit("session_start", { type: "session_start" });
+check("a claim for a task not running here leaves the title alone", same(stale.titles, []), stale.titles);
+
+rmSync(join(signalDir, "task"), { force: true });
+const bare = boot();
+await bare.emit("session_start", { type: "session_start" });
+check("no claim file means no title change", same(bare.titles, []), bare.titles);
 
 console.log(failed ? `${failed} failed` : "all passed");
 process.exit(failed ? 1 : 0);

@@ -42,6 +42,10 @@ worktree path and branch in git-wt repos. No task running here, no task line.
 - The claim is stored in `$SMOLVM_SIGNAL_PATH/task`, beside `state` and `tmux-*`,
   so a restarted pane picks its own task back up and host notification scripts
   can read the ticket from the folder they already watch
+- `backlog-title.ts` reads the same file at session start and puts the ticket
+  back in the terminal title, after pi finishes rewriting titles during startup.
+  The shared parsing lives in `extensions/lib/claim.ts`, which directory
+  discovery skips because it has no `index.ts`
 - Read from backlog tool results (MCP and CLI), after the result rather than on
   `tool_call`, which can read the task file before the command finishes writing it
 - Follows the worktree the agent `cd`s into and injects the git-wt skill prompt

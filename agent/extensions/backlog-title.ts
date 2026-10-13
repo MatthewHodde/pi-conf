@@ -12,6 +12,7 @@
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { basename } from "node:path";
+import { findRunningTask, findTaskDir, loadClaim } from "./lib/claim.ts";
 
 const ACTIVE_STATUS = "in progress";
 
@@ -116,6 +117,36 @@ export function defaultTitle(ctx: {
 export default function (pi: ExtensionAPI) {
   const pending = new Map<string, TaskChange>();
   let activeId: string | null = null;
+  let restoreTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // A restarted pane gets its ticket back from the claim file, but only while
+  // that task is still running here. The widget drops a claim that is not.
+  const applyClaimedTitle = (ctx: { ui?: { setTitle?(title: string): void } }) => {
+    if (!activeId) return;
+    if (typeof ctx.ui?.setTitle === "function") ctx.ui.setTitle(activeId);
+  };
+
+  pi.on("session_start", async (_event, ctx) => {
+    const claimed = loadClaim();
+    if (!claimed) return;
+    const taskDir = findTaskDir(ctx.cwd);
+    const task = taskDir ? findRunningTask(taskDir, claimed) : null;
+    if (!task) return;
+    activeId = task.id;
+    applyClaimedTitle(ctx);
+    // pi rewrites the title while startup finishes, right after session_start.
+    // Put the ticket back once that has settled.
+    if (restoreTimer) clearTimeout(restoreTimer);
+    restoreTimer = setTimeout(() => {
+      restoreTimer = null;
+      applyClaimedTitle(ctx);
+    }, 750);
+  });
+
+  // pi writes its own title while session info settles, after session_start.
+  pi.on("session_info_changed", async (_event, ctx) => {
+    applyClaimedTitle(ctx);
+  });
 
   pi.on("tool_call", (event) => {
     const change = changeFor(event.toolName, event.input);
