@@ -1,18 +1,21 @@
 /**
- * Behavior test for the instance widget: one key, two lines, refresh rules,
- * and a clamp to the width pi hands the widget.
+ * Behavior test for the instance widget: one key, the task this instance
+ * claimed, worktree info, refresh rules, and a clamp to pi's widget width.
  *
  * Run: node agent/extensions/tests/test-instance-widget.mjs
  */
 
 import assert from "node:assert/strict";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 // findTaskDir searches PROJECT_PATH before cwd, which would make the test read
 // this machine's real backlog instead of the fixture.
 delete process.env.PROJECT_PATH;
+// The claim file must land in the fixture, never in the live sandbox folder.
+const signalDir = mkdtempSync(join(tmpdir(), "instance-widget-signal-"));
+process.env.SMOLVM_SIGNAL_PATH = signalDir;
 
 const CSI = /\x1b\[[0-9;?]*[ -/]*[@-~]/g;
 const strip = (text) => text.replace(CSI, "");
@@ -58,27 +61,38 @@ function renderLines(width = 80) {
 
 const plainLines = (width = 80) => (renderLines(width) ?? []).map(strip);
 
+const claimId = () => {
+  try {
+    return readFileSync(join(signalDir, "task"), "utf-8").trim();
+  } catch {
+    return null;
+  }
+};
+
+const cleanups = [];
+
+function taskBody(id, status, title) {
+  // The heading deliberately disagrees: frontmatter is the source of truth.
+  return [
+    "---",
+    `id: ${id}`,
+    `title: ${title}`,
+    `status: "${status}"`,
+    "---",
+    "",
+    `# Task ${id} - heading must lose to frontmatter`,
+    "",
+  ].join("\n");
+}
+
 function makeProject() {
   const project = mkdtempSync(join(tmpdir(), "instance-widget-project-"));
   cleanups.push(project);
   mkdirSync(join(project, "backlog/tasks"), { recursive: true });
   writeFileSync(join(project, "backlog/config.yml"), 'statuses: ["To Do", "In Progress", "Done"]\n');
-  writeFileSync(join(project, "backlog/tasks/pi-101 - demo task.md"), taskBody("In Progress", "demo task"));
+  writeFileSync(join(project, "backlog/tasks/pi-101 - demo task.md"), taskBody("PI-101", "In Progress", "demo task"));
+  writeFileSync(join(project, "backlog/tasks/pi-202 - second task.md"), taskBody("PI-202", "In Progress", "second task"));
   return project;
-}
-
-function taskBody(status, title) {
-  // The heading deliberately disagrees: frontmatter is the source of truth.
-  return [
-    "---",
-    "id: PI-101",
-    `title: ${title}`,
-    `status: "${status}"`,
-    "---",
-    "",
-    "# Task PI-101 - heading must lose to frontmatter",
-    "",
-  ].join("\n");
 }
 
 function makeWorktree() {
@@ -90,11 +104,10 @@ function makeWorktree() {
   return root;
 }
 
-const cleanups = [];
-
-// ── A git-wt repo with an active task ─────────────────────────────────────────
+// ── Two tasks running, this instance claims one of them ───────────────────────
 
 const project = makeProject();
+const tasksDir = join(project, "backlog/tasks");
 const root = makeWorktree();
 process.chdir(root);
 
@@ -108,7 +121,7 @@ assert.ok(handlers.tool_result?.length, "tool_result registered");
 await fire("session_start", {}, makeCtx(project));
 
 assert.equal(widgets.get("instance").opts.placement, "aboveEditor", "widget sits above the editor");
-assert.deepEqual(plainLines(), ["📋 PI-101 — demo task", "🌿 git-wt: project root"], "task line then worktree line");
+assert.deepEqual(plainLines(), ["🌿 git-wt: project root"], "no claim means no task line");
 assert.ok(
   notices.some((n) => n.message.includes("git-wt repo detected")),
   "startup announces the worktree",
@@ -117,49 +130,58 @@ assert.ok(
 const prompt = await handlers.before_agent_start[0]({ systemPrompt: "base" });
 assert.match(prompt.systemPrompt, /Load the git-wt skill/, "git-wt prompt injected");
 
-await fire("tool_call", { toolName: "bash", input: { command: "cd feature-x" } }, makeCtx(project));
-assert.match(plainLines()[1], /feature-x/, "worktree line follows cd");
+await fire(
+  "tool_result",
+  { toolName: "bash", input: { command: 'backlog task edit PI-202 -s "In Progress"' }, isError: false },
+  makeCtx(project),
+);
+assert.deepEqual(
+  plainLines(),
+  ["📋 PI-202 — second task", "🌿 git-wt: project root"],
+  "the claimed task wins over the other running task",
+);
+assert.equal(claimId(), "PI-202", "claim written to the signal folder");
 
-// ── Refresh only when a backlog command reports a result ──────────────────────
-
-writeFileSync(join(project, "backlog/tasks/pi-101 - demo task.md"), taskBody("Done", "demo task"));
 await fire("tool_result", { toolName: "bash", input: { command: "ls" }, isError: false }, makeCtx(project));
-assert.equal(plainLines().length, 2, "unrelated result leaves the stale task line alone");
+assert.equal(plainLines()[0], "📋 PI-202 — second task", "unrelated result leaves the line alone");
 
 await fire(
   "tool_result",
-  { toolName: "mcp__backlog__task_edit", input: { id: "PI-101" }, isError: false },
+  { toolName: "mcp__backlog__task_edit", input: { id: "pi-101", status: "In Progress" }, isError: false },
   makeCtx(project),
 );
-assert.equal(plainLines().length, 1, "finished task drops its line");
+assert.equal(plainLines()[0], "📋 PI-101 — demo task", "an mcp claim takes over");
+assert.equal(claimId(), "PI-101", "the signal folder follows the mcp claim");
 
-writeFileSync(join(project, "backlog/tasks/pi-101 - demo task.md"), taskBody("In Progress", "demo task"));
 await fire(
   "tool_result",
-  { toolName: "bash", input: { command: "backlog task edit PI-101 -s 'In Progress'" }, isError: false },
+  { toolName: "mcp__backlog__task_edit", input: { id: "PI-101", status: "Done" }, isError: false },
   makeCtx(project),
 );
-assert.equal(plainLines()[0], "📋 PI-101 — demo task", "cli backlog result restores the task line");
+assert.deepEqual(plainLines(), ["🌿 git-wt: project root"], "task finished elsewhere means no task line");
+assert.equal(claimId(), null, "cleared claim removes the file");
 
 await fire(
   "tool_result",
   { toolName: "mcp__backlog__task_edit", input: {}, isError: true },
   makeCtx(project),
 );
-assert.equal(plainLines()[0], "📋 PI-101 — demo task", "failed backlog call changes nothing");
+assert.deepEqual(plainLines(), ["🌿 git-wt: project root"], "a failed backlog call changes nothing");
+
+await fire("tool_call", { toolName: "bash", input: { command: "cd feature-x" } }, makeCtx(project));
+assert.match(plainLines().at(-1), /feature-x/, "worktree line follows cd");
 
 // ── Clamping to the width the widget is given ─────────────────────────────────
 
-const longTitle = "a task title that runs well past any reasonable terminal width";
-writeFileSync(join(project, "backlog/tasks/pi-101 - demo task.md"), taskBody("In Progress", longTitle));
+writeFileSync(join(tasksDir, "pi-202 - second task.md"), taskBody("PI-202", "In Progress", "a task title that runs well past any reasonable terminal width"));
 await fire(
   "tool_result",
-  { toolName: "mcp__backlog__task_edit", input: { id: "PI-101" }, isError: false },
+  { toolName: "mcp__backlog__task_edit", input: { id: "PI-202", status: "In Progress" }, isError: false },
   makeCtx(project),
 );
 
 const wide = renderLines(200);
-assert.equal(wide.length, 2, "wide widget still shows both lines");
+assert.equal(wide.length, 2, "wide widget shows task and worktree");
 assert.ok(wide.every((line) => !line.includes("…")), "a line that fits is not cut");
 
 const narrow = renderLines(16);
@@ -168,14 +190,13 @@ assert.ok(narrow.every((line) => [...strip(line)].length <= 16), "every line fit
 assert.ok(narrow.every((line) => strip(line).endsWith("…")), "the cut is marked with an ellipsis");
 assert.ok(narrow.every((line) => line.endsWith("\x1b[0m")), "the cut closes the colour reset");
 
-// ── Neither source present: the key goes away ────────────────────────────────
+// ── A restarted pane picks its own task back up ───────────────────────────────
 
-const plain = mkdtempSync(join(tmpdir(), "instance-widget-plain-"));
-cleanups.push(plain);
-process.chdir(plain);
+assert.equal(claimId(), "PI-202", "claim file holds the running task");
 
-const fresh = (await import(`../instance-widget.ts?fresh=${Date.now()}`)).default;
 const freshHandlers = {};
+const freshWidgets = new Map();
+const fresh = (await import(`../instance-widget.ts?fresh=${Date.now()}`)).default;
 fresh({
   on(name, fn) {
     (freshHandlers[name] ??= []).push(fn);
@@ -183,25 +204,64 @@ fresh({
   registerTool() {},
   registerCommand() {},
 });
-
-const emptyProject = mkdtempSync(join(tmpdir(), "instance-widget-empty-"));
-cleanups.push(emptyProject);
-const emptyWidgets = new Map();
 await Promise.all(
   freshHandlers.session_start.map((handler) =>
     handler({}, {
-      cwd: emptyProject,
+      cwd: project,
       ui: {
         theme,
         setWidget(key, widgetContent, opts) {
-          emptyWidgets.set(key, { content: widgetContent, opts });
+          freshWidgets.set(key, { content: widgetContent, opts });
         },
         notify() {},
       },
     }),
   ),
 );
-assert.equal(emptyWidgets.get("instance").content, undefined, "no sources means no widget");
+const restored = freshWidgets.get("instance").content(null, theme).render(80).map(strip);
+assert.deepEqual(
+  restored,
+  [
+    "📋 PI-202 — a task title that runs well past any reasonable terminal width",
+    "🌿 git-wt: project root",
+  ],
+  "restarted pane shows its own task",
+);
+
+// ── No backlog and no worktree: the key goes away ────────────────────────────
+
+const plain = mkdtempSync(join(tmpdir(), "instance-widget-plain-"));
+cleanups.push(plain);
+process.chdir(plain);
+
+const idleHandlers = {};
+const idleWidgets = new Map();
+const idle = (await import(`../instance-widget.ts?idle=${Date.now()}`)).default;
+idle({
+  on(name, fn) {
+    (idleHandlers[name] ??= []).push(fn);
+  },
+  registerTool() {},
+  registerCommand() {},
+});
+const emptyProject = mkdtempSync(join(tmpdir(), "instance-widget-empty-"));
+cleanups.push(emptyProject);
+await Promise.all(
+  idleHandlers.session_start.map((handler) =>
+    handler({}, {
+      cwd: emptyProject,
+      ui: {
+        theme,
+        setWidget(key, widgetContent, opts) {
+          idleWidgets.set(key, { content: widgetContent, opts });
+        },
+        notify() {},
+      },
+    }),
+  ),
+);
+assert.equal(idleWidgets.get("instance").content, undefined, "no sources means no widget");
 
 for (const dir of cleanups) rmSync(dir, { recursive: true, force: true });
+rmSync(signalDir, { recursive: true, force: true });
 console.log("instance-widget => ok");

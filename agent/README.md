@@ -30,16 +30,20 @@ Custom extensions, skills, and patches for the Pi coding agent.
 
 #### instance-widget.ts
 
-Owns the line above the prompt: the active backlog task, then the worktree path
-and branch in git-wt repos.
+Owns the line above the prompt: the task this instance is running, then the
+worktree path and branch in git-wt repos. No task running here, no task line.
 
 - One widget key (`instance`), one owner. pi orders widgets by `setWidget` call
   order and a re-set moves a key to the end, so two extensions refreshing on
   different triggers swap lines mid-session
-- Task id and title come from task frontmatter; the first `In Progress` task in
-  filename order wins
-- Refreshes on backlog tool results (MCP and CLI) rather than on `tool_call`,
-  which can read the task file before the command finishes writing it
+- The task line is the one this pane claimed with a successful backlog
+  `In Progress` change, parsed by the same `changeFor`/`nextTitle` helpers the
+  terminal title uses, so several running tasks never make it guess
+- The claim is stored in `$SMOLVM_SIGNAL_PATH/task`, beside `state` and `tmux-*`,
+  so a restarted pane picks its own task back up and host notification scripts
+  can read the ticket from the folder they already watch
+- Read from backlog tool results (MCP and CLI), after the result rather than on
+  `tool_call`, which can read the task file before the command finishes writing it
 - Follows the worktree the agent `cd`s into and injects the git-wt skill prompt
 - The widget is a component, so `render(width)` clamps each line to the width pi
   gives it: a long task title ends in a dim ellipsis instead of wrapping

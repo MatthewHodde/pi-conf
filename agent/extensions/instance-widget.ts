@@ -2,6 +2,11 @@
  * instance-widget.ts — the one line above the prompt that says what this
  * instance is working on and where.
  *
+ * The task line shows the task this instance claimed: the backlog status change
+ * to In Progress that this pane carried out. No claim, no line. The claim is
+ * kept in the instance's sandbox-state folder so a restarted pane picks it back
+ * up and the host notification scripts can read the same file.
+ *
  * One widget key, one owner. pi orders widgets by setWidget call order and a
  * re-set moves a key to the end, so two extensions refreshing on different
  * triggers would swap their lines mid-session.
@@ -15,9 +20,10 @@
  */
 
 import type { ExtensionAPI, ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
+import { changeFor, nextTitle } from "./backlog-title.ts";
 
 const WIDGET_KEY = "instance";
 
@@ -33,7 +39,7 @@ interface GitWtInfo {
   root?: string;
 }
 
-// ── Active backlog task ────────────────────────────────────────────────────────
+// ── The task this instance runs ────────────────────────────────────────────────
 
 const CONFIG_CANDIDATES = [
   "backlog/config.yml",
@@ -101,21 +107,50 @@ function taskTitle(file: string, content: string): string {
   return file.replace(/\.md$/, "").split(" - ").slice(1).join(" - ").trim();
 }
 
-function findActiveTask(taskDir: string): ActiveTask | null {
-  for (const file of listTaskFiles(taskDir).sort()) {
+function findRunningTask(taskDir: string, id: string): ActiveTask | null {
+  const wanted = id.toUpperCase();
+  for (const file of listTaskFiles(taskDir)) {
     let content: string;
     try {
       content = readFileSync(join(taskDir, file), "utf-8");
     } catch {
       continue;
     }
+    if (taskId(file, content).toUpperCase() !== wanted) continue;
 
     const status = taskStatus(content);
-    if (!status || status.toLowerCase() !== "in progress") continue;
-
+    if (!status || status.toLowerCase() !== "in progress") return null;
     return { id: taskId(file, content), title: taskTitle(file, content) || "Untitled" };
   }
   return null;
+}
+
+/** The claim lives beside state and tmux-* in the instance's sandbox-state folder. */
+function claimFile(): string | null {
+  const dir = process.env.SMOLVM_SIGNAL_PATH;
+  if (!dir || !existsSync(dir)) return null;
+  return join(dir, "task");
+}
+
+function saveClaim(id: string | null): void {
+  const file = claimFile();
+  if (!file) return;
+  try {
+    if (id) writeFileSync(file, `${id}\n`, "utf-8");
+    else rmSync(file, { force: true });
+  } catch {
+    // Losing the signal folder costs persistence, not the session.
+  }
+}
+
+function loadClaim(): string | null {
+  const file = claimFile();
+  if (!file) return null;
+  try {
+    return readFileSync(file, "utf-8").trim() || null;
+  } catch {
+    return null;
+  }
 }
 
 // ── git-wt worktree ────────────────────────────────────────────────────────────
@@ -284,11 +319,12 @@ export default function (pi: ExtensionAPI) {
   const info = detectGitWt();
   let currentCwd = process.cwd();
   let taskDir: string | null = null;
-  let activeTask: ActiveTask | null = null;
+  let claimedId: string | null = null;
+  let runningTask: ActiveTask | null = null;
   let lastCtx: ExtensionContext | null = null;
 
-  function refreshActiveTask() {
-    activeTask = taskDir ? findActiveTask(taskDir) : null;
+  function refreshRunningTask() {
+    runningTask = taskDir && claimedId ? findRunningTask(taskDir, claimedId) : null;
   }
 
   function renderWidget() {
@@ -296,8 +332,8 @@ export default function (pi: ExtensionAPI) {
 
     const theme = lastCtx.ui.theme;
     const lines: string[] = [];
-    if (activeTask) {
-      lines.push(theme.fg("success", `📋 ${activeTask.id} — ${activeTask.title}`));
+    if (runningTask) {
+      lines.push(theme.fg("success", `📋 ${runningTask.id} — ${runningTask.title}`));
     }
     if (info.detected && info.root) {
       lines.push(worktreeLine(info.root, currentCwd, theme));
@@ -326,7 +362,13 @@ export default function (pi: ExtensionAPI) {
   pi.on("session_start", async (_event, ctx) => {
     lastCtx = ctx;
     taskDir = findTaskDir(ctx.cwd);
-    refreshActiveTask();
+    claimedId = loadClaim();
+    refreshRunningTask();
+    if (claimedId && taskDir && !runningTask) {
+      // The task stopped running here while the pane was away, so the claim goes too.
+      claimedId = null;
+      saveClaim(null);
+    }
 
     if (info.detected) {
       ctx.ui.notify(`🌿 git-wt repo detected at ${info.root}`, "info");
@@ -384,17 +426,21 @@ export default function (pi: ExtensionAPI) {
     }
   });
 
-  // The task file is on disk by the time backlog reports a result, which a
-  // timer started at tool_call cannot promise.
+  // backlog-title parses the same status change for the terminal title, so the
+  // title and this line name one task without sharing mutable state. A timer on
+  // tool_call could not promise the task file is written yet, so both wait for
+  // the result.
   pi.on("tool_result", async (event) => {
     if (event.isError || !lastCtx) return;
 
-    const backlogMcp = event.toolName.startsWith("mcp__backlog__");
-    const backlogCli =
-      event.toolName === "bash" && /\bbacklog\b/.test(event.input?.command || "");
-    if (!backlogMcp && !backlogCli) return;
+    const change = changeFor(event.toolName, event.input);
+    if (!change) return;
+    const next = nextTitle(change, claimedId, "");
+    if (!next) return;
 
-    refreshActiveTask();
+    claimedId = next.activeId;
+    saveClaim(claimedId);
+    refreshRunningTask();
     renderWidget();
   });
 }
