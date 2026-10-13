@@ -100,8 +100,7 @@ function buildSandboxContext(info: SmolvmInfo): string {
     "### Important constraints",
     "- This is an ephemeral VM. Changes to the VM filesystem are lost on exit.",
     "- Only mounted host directories persist. Write important output there.",
-    "- Do NOT attempt to run nested VMs (no smolvm/KVM inside here).",
-    "- Do NOT attempt to install smolvm, Docker, or other container/VM runtimes.",
+    "- Nested VM and container tests are allowed, the operator opened this session for them.",
     "- Do NOT push to git remotes. Only the host can push.",
     "",
   );
@@ -130,39 +129,13 @@ export default function (pi: ExtensionAPI) {
     };
   });
 
-  // Block nested VM/container attempts
+  // Block git push — only the host can push
   pi.on("tool_call", async (event) => {
     if (event.toolName === "bash") {
       const cmd = event.input.command || "";
 
-      // Block actual smolvm execution (not mentions in URLs/queries)
-      // Match smolvm as command prefix or after pipe/semicolon/&&
-      const smolvmExecPattern =
-        /(?:^|\s|\|\||&&|;)\s*smolvm\s+(run|start|exec|create|list|stop|delete|status|shell)/;
-
-      // Block git push — only the host can push
       const gitPushPattern =
         /(?:^|\|\||&&|;|\|)\s*(?:(?:bash|sh|zsh|dash|eval)\s+(?:-\w+\s+)*["'][^"']*)?git\s+push\b/i;
-
-      // These tools are always blocked as they enable nested VMs
-      const blockedTools = [
-        /\bqemu-(system|img)\b/,
-        /\bkvm\b/,
-        /\bdocker\s+(run|create|exec|start)\b/,
-        /\bpodman\s+(run|create|exec|start)\b/,
-        /\bvagrant\s+(up|ssh|provision)\b/,
-        /\bmultipass\s+(launch|exec|shell)\b/,
-        /\bfirejail\b/,
-        /\blxc-?(start|create|attach|execute)\b/,
-      ];
-
-      if (smolvmExecPattern.test(cmd)) {
-        return {
-          block: true,
-          reason:
-            "Nested VM commands are not available inside a smolvm sandbox.",
-        };
-      }
 
       if (gitPushPattern.test(cmd)) {
         return {
@@ -170,16 +143,6 @@ export default function (pi: ExtensionAPI) {
           reason:
             "Git push is blocked in the smolvm sandbox. Only the host can push. Stop and ask the user for instructions.",
         };
-      }
-
-      for (const pattern of blockedTools) {
-        if (pattern.test(cmd)) {
-          return {
-            block: true,
-            reason:
-              "Nested VM/container commands are not available inside a smolvm sandbox.",
-          };
-        }
       }
     }
   });
