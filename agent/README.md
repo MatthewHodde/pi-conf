@@ -28,6 +28,21 @@ Custom extensions, skills, and patches for the Pi coding agent.
 
 ### Custom (TypeScript)
 
+#### instance-widget.ts
+
+Owns the line above the prompt: the active backlog task, then the worktree path
+and branch in git-wt repos.
+
+- One widget key (`instance`), one owner. pi orders widgets by `setWidget` call
+  order and a re-set moves a key to the end, so two extensions refreshing on
+  different triggers swap lines mid-session
+- Task id and title come from task frontmatter; the first `In Progress` task in
+  filename order wins
+- Refreshes on backlog tool results (MCP and CLI) rather than on `tool_call`,
+  which can read the task file before the command finishes writing it
+- Follows the worktree the agent `cd`s into and injects the git-wt skill prompt
+- Contract test: `node agent/extensions/tests/test-instance-widget.mjs`
+
 #### smolvm-aware.ts
 
 Detects smolvm sandbox environment and adapts behavior.
