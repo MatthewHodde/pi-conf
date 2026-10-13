@@ -41,7 +41,8 @@ Detects smolvm sandbox environment and adapts behavior.
 
 #### smolvm-notify.ts
 
-Writes agent state to `/tmp/smolvm/state` for host-side notification daemon.
+Writes agent state to the pi config mount for the host-side notification daemon.
+Path: `SMOLVM_SIGNAL_PATH` when set, else `$HOME/.pi/agent/sandbox-state/default`.
 
 - States: `idle`, `working`, `blocked`
 - Events: `session_start`, `agent_start`, `agent_settled`, `ui_prompt_start`, `ui_prompt_end`, `session_shutdown`

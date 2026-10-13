@@ -1,7 +1,9 @@
 /**
  * smolvm-notify: pi extension for host-side notifications
  *
- * Writes agent state to /tmp/smolvm/state for host-side notification daemon.
+ * Writes agent state under the pi config mount so the host listener can
+ * watch it without a separate virtiofs (IRQ budget). Path comes from
+ * SMOLVM_SIGNAL_PATH; falls back to $HOME/.pi/agent/sandbox-state/default.
  * Only active when SMOLVM env var is set (running inside smolvm).
  * States: idle, working, blocked
  *
@@ -19,7 +21,9 @@ import { writeFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 
 const IN_SMOLVM = !!process.env.SMOLVM;
-const SIGNAL_DIR = "/tmp/smolvm";
+const HOME = process.env.HOME || "/home/ubuntu";
+const SIGNAL_DIR =
+  process.env.SMOLVM_SIGNAL_PATH || join(HOME, ".pi/agent/sandbox-state/default");
 const STATE_FILE = join(SIGNAL_DIR, "state");
 
 function writeState(state: string): void {

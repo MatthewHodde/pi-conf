@@ -16,3 +16,4 @@
 agent/bin/gitleaks
 /.cache/
 /agent/*.bak*
+agent/sandbox-state/
