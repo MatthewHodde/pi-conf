@@ -14,3 +14,5 @@
 /agent/tmp/
 /agent/fff/
 agent/bin/gitleaks
+/.cache/
+/agent/*.bak*
