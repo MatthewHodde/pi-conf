@@ -24,7 +24,6 @@
     "npm:pi-subagents",
     "npm:@whamp/pi-pstack",
     "npm:@narumitw/pi-btw",
-    "npm:agent-ste",
     "npm:@ff-labs/pi-fff"
   ],
   "extensions": [],
