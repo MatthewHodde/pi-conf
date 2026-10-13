@@ -9,6 +9,9 @@
  * The git-wt agent context lives here too, because that is where the worktree
  * facts are read: the extension tells the agent to load the git-wt skill and
  * tracks the worktree the agent cd'd into.
+ *
+ * The widget is a component rather than a string array, so render() receives
+ * the width pi has for it and clamps each line to that, ellipsis included.
  */
 
 import type { ExtensionAPI, ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
@@ -214,6 +217,67 @@ function getWorktreeDirs(root: string): string[] {
   }
 }
 
+// ── Width clamping ──────────────────────────────────────────────────────────────
+
+const ANSI = "\\x1b\\[[0-9;?]*[ -/]*[@-~]";
+const ANSI_GLOBAL = new RegExp(ANSI, "g");
+const ANSI_STICKY = new RegExp(ANSI, "y");
+
+/** Code point ranges terminals draw double width. */
+const WIDE_RANGES: [number, number][] = [
+  [0x1100, 0x115f], [0x2e80, 0x303e], [0x3041, 0x33ff], [0x3400, 0x4dbf],
+  [0x4e00, 0x9fff], [0xa000, 0xa4cf], [0xac00, 0xd7a3], [0xf900, 0xfaff],
+  [0xfe30, 0xfe6f], [0xff00, 0xff60], [0xffe0, 0xffe6],
+  [0x1f300, 0x1f64f], [0x1f680, 0x1f6ff], [0x1f900, 0x1f9ff], [0x1fa00, 0x1faff],
+  [0x20000, 0x3fffd],
+];
+
+/** Columns a code point occupies: combining marks and variation selectors take none. */
+function charWidth(cp: number): number {
+  if (cp >= 0x0300 && cp <= 0x036f) return 0;
+  if (cp >= 0xfe00 && cp <= 0xfe0f) return 0;
+  for (const [low, high] of WIDE_RANGES) {
+    if (cp >= low && cp <= high) return 2;
+  }
+  return 1;
+}
+
+function visibleWidth(text: string): number {
+  let width = 0;
+  for (const char of text.replace(ANSI_GLOBAL, "")) {
+    width += charWidth(char.codePointAt(0) ?? 0);
+  }
+  return width;
+}
+
+/** Cut a themed line to width columns, leaving escape sequences intact. */
+function clampLine(line: string, width: number, theme: Theme): string {
+  if (width <= 0) return "";
+  if (visibleWidth(line) <= width) return line;
+
+  const budget = Math.max(1, width - 1); // room for the ellipsis
+  let out = "";
+  let used = 0;
+  let index = 0;
+  while (index < line.length) {
+    ANSI_STICKY.lastIndex = index;
+    const escape = ANSI_STICKY.exec(line);
+    if (escape) {
+      out += escape[0];
+      index += escape[0].length;
+      continue;
+    }
+    const cp = line.codePointAt(index) ?? 0;
+    const cost = charWidth(cp);
+    if (used + cost > budget) break;
+    const char = String.fromCodePoint(cp);
+    out += char;
+    used += cost;
+    index += char.length;
+  }
+  return out + theme.fg("dim", "…");
+}
+
 // ── Extension ──────────────────────────────────────────────────────────────────
 
 export default function (pi: ExtensionAPI) {
@@ -239,9 +303,16 @@ export default function (pi: ExtensionAPI) {
       lines.push(worktreeLine(info.root, currentCwd, theme));
     }
 
-    lastCtx.ui.setWidget(WIDGET_KEY, lines.length ? lines : undefined, {
-      placement: "aboveEditor",
-    });
+    lastCtx.ui.setWidget(
+      WIDGET_KEY,
+      lines.length
+        ? (_tui: unknown, renderTheme: Theme) => ({
+            render: (width: number) => lines.map((line) => clampLine(line, width, renderTheme)),
+            invalidate() {},
+          })
+        : undefined,
+      { placement: "aboveEditor" },
+    );
   }
 
   // Inject git-wt context into every agent turn
