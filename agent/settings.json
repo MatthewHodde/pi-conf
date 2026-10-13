@@ -1,5 +1,5 @@
 {
-  "lastChangelogVersion": "1.0.0",
+  "lastChangelogVersion": "1.0.2",
   "theme": "light-distinct/dark-distinct",
   "defaultProvider": "opencode-go",
   "defaultModel": "mimo-v2.6-flash",
@@ -18,7 +18,6 @@
   "packages": [
     "npm:pi-ask-user",
     "npm:@0xkahi/pi-vim-keys",
-    "npm:pi-ollama",
     "npm:pi-caveman",
     "npm:pi-web-search",
     "npm:@patimweb/pi-mindplace",

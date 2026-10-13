@@ -13,7 +13,7 @@ Custom extensions, skills, and patches for the Pi coding agent.
 ├── skills/              # Custom skill definitions
 ├── npm/                 # Installed npm packages
 │   └── node_modules/
-├── cache/               # Persisted config (e.g. pi-ollama-config.json)
+├── cache/               # Persisted per-extension state
 ├── sessions/            # Session state
 ├── settings.json        # Main pi config
 ├── models.json          # Custom model providers
@@ -61,7 +61,6 @@ Monitors disk usage in smolvm sandboxes.
 |---------|-------------|
 | `@0xkahi/pi-vim-keys` | Vim keybindings with normal mode, leader keys |
 | `pi-ask-user` | Interactive user prompts with structured options |
-| `pi-ollama` | Ollama LLM provider integration |
 | `pi-caveman` | Caveman mode ( terse responses ) |
 | `pi-web-search` | Provider-native `web_search` (keyless) |
 | `@patimweb/pi-mindplace` | Code knowledge graph (`mindplace_query`/`build`/`explain`) |
@@ -113,7 +112,7 @@ through the same gate.
   (falls back to the conversation model when unset).
 - `url_context` ships with pi-web-search but is **Gemini-only**: it needs a Google
   API key and a Gemini-compatible model. This setup has no Gemini credentials
-  (providers: opencode-go/ollama/llama-cpp), so the extension auto-suppresses the
+  (providers: opencode-go/llama.cpp), so the extension auto-suppresses the
   tool from the active list on every model change — the model never sees it, and a
   direct call returns "requires a Google Gemini-compatible model". Harmless dead
   weight; do not document it as available capability.
@@ -271,8 +270,7 @@ Custom providers:
 
 | Provider | Base URL | API |
 |----------|----------|-----|
-| `llama-cpp` | `http://10.200.0.50:8080/v1` | openai-completions |
-| `ollama` | `http://10.200.0.50:11434/v1` | openai-completions |
+| `llama.cpp` | `http://10.200.0.50:8080/v1` | openai-completions |
 
 ### keybindings.json
 
