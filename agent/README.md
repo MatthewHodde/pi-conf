@@ -228,7 +228,7 @@ Key fields:
 | `defaultProvider` | `opencode-go` | |
 | `defaultModel` | `mimo-v2.5` | |
 | `theme` | `light-distinct/dark-distinct` | Auto-switches, Flexoki user panels |
-| `cavemanMode` | via `caveman.json` | `defaultLevel: "lite"` |
+| `cavemanMode` | via `caveman.json` | `defaultLevel: "off"` |
 | `packages` | See above | npm packages to load |
 | `extensions` | `vim-keys-patches.ts` | Custom extension loading |
 
