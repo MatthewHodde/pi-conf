@@ -1,0 +1,18 @@
+--- a/node_modules/@whamp/pi-pstack/extensions/pstack/index.ts
++++ b/node_modules/@whamp/pi-pstack/extensions/pstack/index.ts
+@@ -28,7 +28,6 @@
+ 	pstackModelSelectorsFromSession,
+ 	type PstackScopedModelEntry,
+ } from "./pstack-setup-plan.ts";
+-import { registerAskUserQuestion } from "./ask-user-question.ts";
+ import { stripSkillsByLocationPrefix } from "./skill-strip.ts";
+ 
+ const SKILLS_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "skills");
+@@ -160,7 +159,6 @@
+ 
+ /** Register pstack commands, prompt injection, and session status with Pi. */
+ export default function pstackExtension(pi: ExtensionAPI): void {
+-	registerAskUserQuestion(pi);
+ 
+ 	let potetoMode = false;
+ 
