@@ -34,3 +34,9 @@ question owned by its domain skill, never the `ask_user` tool, and results go fo
 to the user in-conversation (task docs persist, never replace). Specs and designs
 belong in the backlog issue itself.
 
+Host tests belong to the operator. Never move a backlog task to a terminal status
+while any acceptance criterion or Definition of Done item still waits on a
+host-side test, meaning a real build, a real sandbox run, or KVM. Check only what
+the current session can actually observe, leave the rest open, and hand the
+operator a copy-paste command block for the host run. Recorded as decision-003.
+
