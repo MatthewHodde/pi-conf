@@ -30,9 +30,8 @@ Prompt templates (`agent/prompts/`) are thin entry-point wrappers — entry, seq
 and delegation only. They never carry interaction rules: no asks, no approvals, no
 wait-for-reply text. The `workflow` skill is the single home of interaction policy:
 approval gates exist only for merge and close, everything else is a plain-discussion
-question owned by its domain skill, never the `ask_user` tool, and results go forward
-to the user in-conversation (task docs persist, never replace). Specs and designs
-belong in the backlog issue itself.
+question owned by its domain skill, and results go forward to the user in-conversation
+(task docs persist, never replace). Specs and designs belong in the backlog issue itself.
 
 Host tests belong to the operator. Never move a backlog task to a terminal status
 while any acceptance criterion or Definition of Done item still waits on a

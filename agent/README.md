@@ -94,7 +94,7 @@ Enforces the conventional commit format on `git commit`.
 | Package | Description |
 |---------|-------------|
 | `@0xkahi/pi-vim-keys` | Vim keybindings with normal mode, leader keys |
-| `pi-ask-user` | Interactive user prompts with structured options |
+| `@juicesharp/rpiv-ask-user-question` | Interactive user prompts with structured options |
 | `pi-caveman` | Caveman mode ( terse responses ) |
 | `pi-web-search` | Provider-native `web_search` (keyless) |
 | `@patimweb/pi-mindplace` | Code knowledge graph (`mindplace_query`/`build`/`explain`) |
