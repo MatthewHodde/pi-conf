@@ -32,6 +32,15 @@ const edits: [string, unknown][] = [
   ["backlog task list --status 'In Progress'", null],
   ["backlog task view TASK-017", null],
   ["echo backlog task edit TASK-017 -s Done", null],
+  // AC9: a status-less segment earlier in the chain must not abort the parse
+  [
+    'backlog task edit TASK-017 --plan "notes" && backlog task edit TASK-017 -s "In Progress"',
+    { id: "TASK-017", status: "in progress" },
+  ],
+  // AC10: the tasks alias is a real alias of the task group
+  ['backlog tasks edit TASK-017 -s "In Progress"', { id: "TASK-017", status: "in progress" }],
+  // AC11: an id after a glued status flag parses as the id, never as trailing text
+  ['backlog task edit --status="In Progress" TASK-017', { id: "TASK-017", status: "in progress" }],
 ];
 for (const [command, want] of edits) {
   const got = parseEditCommand(command);

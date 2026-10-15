@@ -168,6 +168,13 @@ await fire(
 );
 assert.deepEqual(plainLines(), ["🌿 git-wt: project root"], "a failed backlog call changes nothing");
 
+await fire(
+  "tool_result",
+  { toolName: "bash", input: { command: 'backlog task edit --status="In Progress" PI-202' }, isError: false },
+  makeCtx(project),
+);
+assert.equal(claimId(), "PI-202", "an id after a glued status flag claims the real task");
+
 await fire("tool_call", { toolName: "bash", input: { command: "cd feature-x" } }, makeCtx(project));
 assert.match(plainLines().at(-1), /feature-x/, "worktree line follows cd");
 
