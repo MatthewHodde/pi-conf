@@ -35,10 +35,16 @@ function normalizeId(id: string): string {
 
 function tokenize(text: string): string[] {
   const out: string[] = [];
-  const re = /"([^"]*)"|'([^']*)'|(\S+)/g;
+  const re = /(?:"[^"]*"|'[^']*'|\S)+/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
-    out.push(m[1] ?? m[2] ?? m[3]);
+    const token = m[0];
+    const quote = token[0];
+    out.push(
+      token.length > 1 && (quote === '"' || quote === "'") && token.endsWith(quote)
+        ? token.slice(1, -1)
+        : token
+    );
   }
   return out;
 }
@@ -53,10 +59,12 @@ export function parseEditCommand(command: string): TaskChange | null {
   const segments = command.split(/&&|\|\|[;|\n]/);
   for (const segment of segments) {
     const tokens = tokenize(segment);
-    if (tokens[0] !== "backlog" || tokens[1] !== "task" || tokens[2] !== "edit") continue;
+    // "tasks" is a real alias of the "task" command group.
+    const taskGroup = tokens[1] === "task" || tokens[1] === "tasks";
+    if (tokens[0] !== "backlog" || !taskGroup || tokens[2] !== "edit") continue;
 
     const status = statusOf(segment);
-    if (!status) return null;
+    if (!status) continue;
 
     const id = tokens.slice(3).find((t) => !t.startsWith("-") && t !== status);
     if (!id) return null;
