@@ -175,6 +175,14 @@ await fire(
 );
 assert.equal(claimId(), "PI-202", "an id after a glued status flag claims the real task");
 
+await fire(
+  "tool_result",
+  { toolName: "bash", input: { command: 'backlog task edit PI-202 --final-summary "keeps a glued --status flag"' }, isError: false },
+  makeCtx(project),
+);
+assert.equal(claimId(), "PI-202", "prose mentioning --status leaves the claim alone");
+assert.match(plainLines()[0], /PI-202/, "the line survives a summary that mentions --status");
+
 await fire("tool_call", { toolName: "bash", input: { command: "cd feature-x" } }, makeCtx(project));
 assert.match(plainLines().at(-1), /feature-x/, "worktree line follows cd");
 

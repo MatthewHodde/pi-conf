@@ -41,6 +41,21 @@ const edits: [string, unknown][] = [
   ['backlog tasks edit TASK-017 -s "In Progress"', { id: "TASK-017", status: "in progress" }],
   // AC11: an id after a glued status flag parses as the id, never as trailing text
   ['backlog task edit --status="In Progress" TASK-017', { id: "TASK-017", status: "in progress" }],
+  // AC12: a flag word inside a quoted value is prose, not a status change
+  [
+    'backlog task edit TASK-017 --final-summary "a glued --status flag keeps its value"',
+    null,
+  ],
+  [
+    'backlog task edit TASK-017 --notes "see --status above" -s "In Progress"',
+    { id: "TASK-017", status: "in progress" },
+  ],
+  // AC12: a quoted value that IS the flag word is still prose
+  ['backlog task edit TASK-017 --notes "--status" done', null],
+  [
+    'backlog task edit TASK-017 --notes "-s" -s "In Progress"',
+    { id: "TASK-017", status: "in progress" },
+  ],
 ];
 for (const [command, want] of edits) {
   const got = parseEditCommand(command);
