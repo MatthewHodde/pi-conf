@@ -33,25 +33,47 @@ function normalizeId(id: string): string {
   return id.trim().toUpperCase();
 }
 
-function tokenize(text: string): string[] {
-  const out: string[] = [];
+interface Token {
+  text: string;
+  quoted: boolean;
+}
+
+function tokenize(text: string): Token[] {
+  const out: Token[] = [];
   const re = /(?:"[^"]*"|'[^']*'|\S)+/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
     const token = m[0];
     const quote = token[0];
-    out.push(
-      token.length > 1 && (quote === '"' || quote === "'") && token.endsWith(quote)
-        ? token.slice(1, -1)
-        : token
-    );
+    const quoted =
+      token.length > 1 && (quote === '"' || quote === "'") && token.endsWith(quote);
+    out.push({ text: quoted ? token.slice(1, -1) : token, quoted });
   }
   return out;
 }
 
-function statusOf(segment: string): string | undefined {
-  const m = /(?:^|\s)(?:-s|--status)(?:=|\s+)(?:"([^"]*)"|'([^']*)'|(\S+))/.exec(segment);
-  return m ? (m[1] ?? m[2] ?? m[3]) : undefined;
+function statusOf(tokens: Token[]): string | undefined {
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    // A quoted word is prose even when it is spelled like the flag.
+    if (token.quoted) continue;
+    let value: string | undefined;
+    if (token.text === "-s" || token.text === "--status") {
+      value = tokens[i + 1]?.text;
+    } else if (token.text.startsWith("-s=") || token.text.startsWith("--status=")) {
+      value = token.text.slice(token.text.indexOf("=") + 1);
+    }
+    if (value === undefined) continue;
+    if (
+      value.length > 1 &&
+      (value.startsWith('"') || value.startsWith("'")) &&
+      value.endsWith(value[0])
+    ) {
+      value = value.slice(1, -1);
+    }
+    return value;
+  }
+  return undefined;
 }
 
 /** Parse `backlog task edit <id> -s <status>` out of a bash command line. */
@@ -59,14 +81,15 @@ export function parseEditCommand(command: string): TaskChange | null {
   const segments = command.split(/&&|\|\|[;|\n]/);
   for (const segment of segments) {
     const tokens = tokenize(segment);
+    const words = tokens.map((t) => t.text);
     // "tasks" is a real alias of the "task" command group.
-    const taskGroup = tokens[1] === "task" || tokens[1] === "tasks";
-    if (tokens[0] !== "backlog" || !taskGroup || tokens[2] !== "edit") continue;
+    const taskGroup = words[1] === "task" || words[1] === "tasks";
+    if (words[0] !== "backlog" || !taskGroup || words[2] !== "edit") continue;
 
-    const status = statusOf(segment);
+    const status = statusOf(tokens);
     if (!status) continue;
 
-    const id = tokens.slice(3).find((t) => !t.startsWith("-") && t !== status);
+    const id = words.slice(3).find((t) => !t.startsWith("-") && t !== status);
     if (!id) return null;
     return { id: normalizeId(id), status: normalize(status) };
   }
