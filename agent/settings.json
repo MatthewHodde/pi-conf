@@ -16,7 +16,7 @@
   "editorPaddingX": 2,
   "outputPad": 1,
   "packages": [
-    "npm:pi-ask-user",
+    "npm:@juicesharp/rpiv-ask-user-question@2.13.8",
     "npm:@0xkahi/pi-vim-keys",
     "npm:pi-caveman",
     "npm:pi-web-search",
