@@ -49,32 +49,25 @@ Before the tool call, state in plain text. Three to seven short bullets.
 - trade-offs
 - your recommendation, if any
 
-### 4) Ask every independent question in one call
+### 4) Ask one question per call
 
-Call `ask_user_question` once. Put each question in the `questions` array.
-Batch questions only when their options do not depend on another answer. Ask
-a dependent question in a later call, once the first answer is known.
+Call `ask_user_question` once per question. Each call carries exactly one
+question. Independent questions become separate calls inside the same
+question budget. Ask a dependent question in a later call, once the first
+answer is known.
 
 Payload rules.
 
-- 1 to 4 questions per call. Question text must be unique within the call
-  and should end with a question mark.
-- Each question needs a `header`, a chip of at most 16 characters, for
-  example "Auth method" or "Library".
-- Each question needs 2 to 4 options. Labels must be unique within the
-  question.
-- `label` is at most 60 characters, 1 to 5 words, outcome-oriented. When you
-  recommend an option, make it first and put "(Recommended)" at the end of
-  its label.
-- `description` explains what the choice means or its trade-offs.
-- Set `multiSelect: true` when several answers are valid. Leave it off when
-  options are mutually exclusive.
-- `preview` (single-select questions only) holds markdown for artifacts the
-  user compares side by side, such as UI mockups, code snippets, or config
-  variants. Skip it for simple preference questions.
+- One question per call. The `question` string should end with a question
+  mark.
+- `options` holds 2 to 6 unique strings. Keep each option short and
+  outcome-oriented. When you recommend an option, make it first and put
+  "(Recommended)" at the end.
+- Set `allow_multiple: true` when several answers are valid. Leave it off
+  when options are mutually exclusive.
 
-Never author the rows the tool appends itself. "Type something.", "Other",
-and "Next" are reserved labels and are rejected at runtime.
+The tool appends its own "Type a different answer" row to every question.
+Never author that row yourself.
 
 ### 5) Commit the decision
 
@@ -90,8 +83,9 @@ Do not run repeat confirmation loops.
 
 ## Question budget
 
-- Max 1 call per decision boundary in normal cases.
-- Max 2 calls for the same boundary when the first answer was unclear or
+- Max one question per decision boundary in normal cases. Independent
+  questions become separate calls and share that budget.
+- Max two calls for the same boundary when the first answer was unclear or
   cancelled.
 - Never ask the same trade-off again without new evidence.
 
@@ -99,43 +93,36 @@ Escalation ladder.
 
 1. Attempt 1, structured options plus the concise summary from step 3.
 2. Attempt 2, only if needed, a narrower question with your recommendation
-   and these choices. Proceed with recommended option, choose another option
-   (freeform), stop for now.
+   as the first option and "Stop for now" as the other. The user can type a
+   different answer.
 
 After attempt 2. For a `high_stakes` boundary, stop and mark the work
 blocked. Do not keep asking. For an `ambiguous` boundary where the user says
 "your call", proceed with the most reversible default and state the
 assumptions.
 
+## UI requirement
+
+The tool needs an interactive TUI session. With no UI the call throws
+"Pstack question UI unavailable in this Pi mode". Do not call it in
+headless runs. State the blocked decision in your reply instead.
+
 ## Payload example
 
 ```json
 {
-  "questions": [
-    {
-      "question": "Which caching strategy should the first release use?",
-      "header": "Cache",
-      "options": [
-        {
-          "label": "Redis (Recommended)",
-          "description": "Shared across instances and fast, adds an ops dependency"
-        },
-        {
-          "label": "In-memory",
-          "description": "No new dependency, weak consistency between instances"
-        }
-      ]
-    },
-    {
-      "question": "Which hardening items go into the first wave?",
-      "header": "Hardening",
-      "multiSelect": true,
-      "options": [
-        { "label": "Rate limiting", "description": "Caps abuse, needs a limit decision now" },
-        { "label": "Audit logging", "description": "Cheap to add, pays off during incidents" }
-      ]
-    }
-  ]
+  "question": "Which caching strategy should the first release use?",
+  "options": ["Redis (Recommended)", "In-memory"]
+}
+```
+
+With multiple selections allowed.
+
+```json
+{
+  "question": "Which hardening items go into the first wave?",
+  "options": ["Rate limiting", "Audit logging", "Request tracing"],
+  "allow_multiple": true
 }
 ```
 
@@ -151,5 +138,5 @@ decision. Ambiguity-only work proceeds only on a delegated choice.
 - Asking about trivial formatting choices
 - Forcing options when a typed answer is clearly better
 - Repeating a question without new information
-- Batching dependent questions in one call
+- Asking a dependent question before its prerequisite answer
 - Proceeding with high-stakes work after a cancelled or unclear answer
