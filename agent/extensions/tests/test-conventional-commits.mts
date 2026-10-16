@@ -1,18 +1,26 @@
 import assert from "node:assert/strict";
 import extension, { validate } from "../conventional-commits.ts";
-const cases: [string,string][] = [
-  ["clean subject only", "fix: stop push in sandbox"],
-  ["good why body", "feat: add csv export\n\nLarge exports were unreadable uncompressed."],
-  ["coauthor claude", "chore: update deps\n\nCo-Authored-By: Claude <noreply@anthropic.com>"],
-  ["gpt mention", "refactor: swap lib\n\nZero API cost. Reviewed with GPT-5."],
-  ["anthropic word", "docs: note\n\nPer Anthropic guidance we dropped it."],
-  ["21 body lines", "feat: x\n\n" + Array.from({length:21},(_,i)=>"line "+i).join("\n")],
-  ["20 body lines", "feat: x\n\n" + Array.from({length:20},(_,i)=>"line "+i).join("\n")],
-  ["ai word in subject ok", "feat: add ai-assisted triage"],
-  ["plain inventory", "chore: bump\n\n- a.ts changed\n- b.ts changed"],
-  ["existing good commit", "feat(smolvm): block git push in sandbox, only host can push\n\nAgent inside smolvm sandbox should not push to git remotes.\nAdds tool-level blocker with tight regex and prompt instruction."],
+const cases: [string,string,boolean][] = [
+  ["clean subject only", "fix: stop push in sandbox", true],
+  ["good why body", "feat: add csv export\n\nLarge exports were unreadable uncompressed.", true],
+  ["coauthor claude", "chore: update deps\n\nCo-Authored-By: Claude <noreply@anthropic.com>", false],
+  ["gpt mention", "refactor: swap lib\n\nZero API cost. Reviewed with GPT-5.", false],
+  ["anthropic word", "docs: note\n\nPer Anthropic guidance we dropped it.", false],
+  ["21 body lines", "feat: x\n\n" + Array.from({length:21},(_,i)=>"line "+i).join("\n"), false],
+  ["20 body lines", "feat: x\n\n" + Array.from({length:20},(_,i)=>"line "+i).join("\n"), true],
+  ["ai word in subject ok", "feat: add ai-assisted triage", true],
+  ["plain inventory", "chore: bump\n\n- a.ts changed\n- b.ts changed", true],
+  // Historical 33a025a predates the 50-char subject limit; kept as a length-rule fixture.
+  ["subject over 50 chars", "feat(smolvm): block git push in sandbox, only host can push\n\nAgent inside smolvm sandbox should not push to git remotes.\nAdds tool-level blocker with tight regex and prompt instruction.", false],
 ];
-for (const [n,m] of cases) console.log(n, "=>", JSON.stringify(validate(m)));
+for (const [name, message, expected] of cases) {
+  const result = validate(message);
+  assert.equal(
+    result.ok,
+    expected,
+    `${name}: expected ok=${expected}, got ok=${result.ok}${result.error ? ` (${result.error})` : ""}`,
+  );
+}
 
 // pi 1.0 event contract: the event carries `input`, and a block returns `{ block, reason }`.
 // See ToolCallEvent / ToolCallEventResult in pi-coding-agent/dist/core/extensions/types.d.ts.
