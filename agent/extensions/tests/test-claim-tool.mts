@@ -101,12 +101,22 @@ function makeExec(project: string, calls: Recorded[]) {
 }
 
 const tools: any[] = [];
-claimToolExt({ on() {}, registerTool: (t: any) => tools.push(t), registerCommand() {} } as never);
+const toolPi: any = {
+  on() {},
+  registerTool: (t: any) => tools.push(t),
+  registerCommand() {},
+};
+claimToolExt(toolPi as never);
 const claimTool = tools.find((t) => t.name === CLAIM_TOOL);
 check("claim_tool is registered", !!claimTool);
 
-const runTool = (project: string, exec: any, params: unknown) =>
-  claimTool.execute("call-1", params, undefined, undefined, { cwd: project, exec });
+// The real tool context carries cwd but no exec; exec lives on the ExtensionAPI
+// (pi). Wire the mock to pi and hand execute only the real ctx shape, so a
+// ctx.exec regression throws here instead of passing a fabricated context.
+const runTool = (project: string, exec: any, params: unknown) => {
+  toolPi.exec = exec;
+  return claimTool.execute("call-1", params, undefined, undefined, { cwd: project });
+};
 
 // AC6: a claim without an id fails and runs no command.
 {

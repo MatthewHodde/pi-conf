@@ -67,7 +67,7 @@ export default function (pi: ExtensionAPI) {
       if (!taskDir) return fail("No backlog found in this project.");
       if (!taskExists(taskDir, wanted)) return fail(`No backlog task ${wanted} found.`);
 
-      const result = await ctx.exec(
+      const result = await pi.exec(
         "backlog",
         ["task", "edit", wanted, "-s", IN_PROGRESS],
         { cwd: ctx.cwd }
