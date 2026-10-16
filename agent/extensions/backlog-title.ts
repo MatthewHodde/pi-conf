@@ -12,9 +12,11 @@
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { basename } from "node:path";
-import { findRunningTask, findTaskDir, loadClaim } from "./lib/claim.ts";
+import { CLAIM_TOOL, findRunningTask, findTaskDir, loadClaim } from "./lib/claim.ts";
 
 const ACTIVE_STATUS = "in progress";
+// The claim_task tool's release action: an instance dropping its own claim.
+const RELEASED_STATUS = "released";
 
 // pi builds its own title as APP_TITLE, then the session name, then the cwd
 // basename. APP_TITLE is "π" unless the pi package sets piConfig.name.
@@ -107,12 +109,20 @@ export function parseMcpEdit(
   return { id: normalizeId(id), status: normalize(status) };
 }
 
-/** One entry point for every route that can move a task. */
+/** One entry point for every route that can move a task or change a claim. */
 export function changeFor(toolName: string, input: unknown): TaskChange | null {
   if (!input || typeof input !== "object") return null;
   const record = input as Record<string, unknown>;
   if (toolName === "bash" && typeof record.command === "string") {
     return parseEditCommand(record.command);
+  }
+  // The explicit claim tool: structured params, not a parsed command string.
+  if (toolName === CLAIM_TOOL && typeof record.action === "string") {
+    if (record.action === "release") return { id: "", status: RELEASED_STATUS };
+    if (record.action === "claim" && typeof record.id === "string" && record.id.trim()) {
+      return { id: normalizeId(record.id), status: ACTIVE_STATUS };
+    }
+    return null;
   }
   return parseMcpEdit(toolName, record);
 }
@@ -126,6 +136,10 @@ export function nextTitle(
   activeId: string | null,
   defaultTitle: string
 ): { title: string; activeId: string | null } | null {
+  // A release drops this instance's claim whoever holds it.
+  if (change.status === RELEASED_STATUS) {
+    return { title: defaultTitle, activeId: null };
+  }
   if (change.status === ACTIVE_STATUS) {
     return { title: change.id, activeId: change.id };
   }

@@ -13,6 +13,9 @@ export interface ActiveTask {
   title: string;
 }
 
+/** The registered tool an agent uses to claim or release a backlog task. */
+export const CLAIM_TOOL = "claim_task";
+
 const CONFIG_CANDIDATES = [
   "backlog/config.yml",
   "backlog/backlog.config.yml",
@@ -77,6 +80,21 @@ function taskTitle(file: string, content: string): string {
   const heading = content.match(/^#\s+(.+)$/m);
   if (heading) return heading[1].replace(/^Task\s+\S+\s*-\s*/i, "");
   return file.replace(/\.md$/, "").split(" - ").slice(1).join(" - ").trim();
+}
+
+/** Whether a backlog task with this id exists, whatever its status. */
+export function taskExists(taskDir: string, id: string): boolean {
+  const wanted = id.toUpperCase();
+  for (const file of listTaskFiles(taskDir)) {
+    let content: string;
+    try {
+      content = readFileSync(join(taskDir, file), "utf-8");
+    } catch {
+      continue;
+    }
+    if (taskId(file, content).toUpperCase() === wanted) return true;
+  }
+  return false;
 }
 
 /** The claimed task while it is still running here, null once it is not. */

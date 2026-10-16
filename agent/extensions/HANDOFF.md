@@ -44,6 +44,10 @@ Each top-level `.ts` file is one extension.
   watches one pair of tool events, so it catches the backlog CLI, the backlog
   MCP server, and codemode scripts alike. The title changes only on a
   successful tool result.
+- `claim-tool.ts` registers the `claim_task` tool, the explicit way for an agent
+  to claim or release a backlog task. Claiming moves the task to In Progress
+  itself and announces it here; the title and widget pick the result up through
+  the same tool-result machinery as the interception path.
 - `conventional-commits.ts` enforces conventional commit messages. It blocks a
   `git commit` whose message breaks the format and runs the secret scanner
   first. The scanner path resolves as `../bin/scan-secrets` from this file.
@@ -58,8 +62,9 @@ Each top-level `.ts` file is one extension.
   where the host listener can read it. It activates only inside smolvm.
 
 `lib/claim.ts` is the shared rule for which backlog task an instance runs.
-`backlog-title.ts` and `instance-widget.ts` import it. It is not an extension.
-It sits in `lib/` with no registration, so pi's directory discovery skips it.
+`backlog-title.ts`, `instance-widget.ts`, and `claim-tool.ts` import it. It is not
+an extension. It sits in `lib/` with no registration, so pi's directory
+discovery skips it.
 
 `pi-vim-keys/config.json` holds keybindings for the installed
 `@0xkahi/pi-vim-keys` package, including the leader mappings and
