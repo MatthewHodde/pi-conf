@@ -1,13 +1,6 @@
 /**
- * Probe the registered ask tools on a real pi load (PI-064 AC #2/#3).
- *
- * Run:  pi -e ~/.pi/agent/extensions/tests/probe-ask-tools.ts -p --no-session ok
- * Reads: $PI_ASK_PROBE_OUT, defaults to /tmp/ask-probe.json
- *
- * Dumps every registered tool whose name contains "ask" at session_start,
- * then exits before any model call. A correct install shows exactly one
- * ask_user_question sourced from @juicesharp/rpiv-ask-user-question and no
- * tool named ask_user.
+ * PI-066 AC #4.
+ * Run: pi -e agent/extensions/tests/probe-ask-tools.ts -p --no-session ok
  */
 
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
@@ -22,6 +15,12 @@ export default function (pi: ExtensionAPI) {
 			.filter((t) => t.name.includes("ask"))
 			.map((t) => ({ name: t.name, path: t.sourceInfo.path, source: t.sourceInfo.source }));
 		writeFileSync(OUT, JSON.stringify(askTools, null, 2) + "\n");
-		process.exit(0);
+		const askUser = askTools.filter((t) => t.name === "ask_user_question");
+		const ok =
+			askUser.length === 1 &&
+			askUser[0].source.includes("@whamp/pi-pstack") &&
+			!askTools.some((t) => t.name === "ask_user");
+		if (!ok) console.error(`wrong ask tool set, see ${OUT}`);
+		process.exit(ok ? 0 : 1);
 	});
 }
