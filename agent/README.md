@@ -5,22 +5,118 @@ Custom extensions, skills, and patches for the Pi coding agent.
 ## Layout
 
 ```
-~/.pi/agent/
-├── extensions/          # Custom .ts extensions + patch apply/regen scripts
+~/.pi/agent/               # pi home and git repo root
+├── extensions/            # Custom .ts extensions + patch apply/regen scripts
 │   ├── apply-all-patches.sh  # apply all patches (run after pi install/update)
 │   ├── regen-patch.sh        # rebuild a patch from pristine sources
-│   └── patches/         # .patch files for npm packages
-├── skills/              # Custom skill definitions
-├── npm/                 # Installed npm packages
-│   └── node_modules/
-├── cache/               # Persisted per-extension state
-├── sessions/            # Session state
-├── settings.json        # Main pi config
-├── models.json          # Custom model providers
-├── keybindings.json     # Key bindings
-├── caveman.json         # Caveman mode settings
-└── trust.json           # Trusted project paths
+│   └── patches/           # .patch files for npm packages
+├── skills/                # Custom skill definitions
+├── themes/                # light-distinct / dark-distinct themes
+├── prompts/               # Prompt template entry points
+├── bin/                   # scan-secrets scanner; gitleaks binary lives here (gitignored)
+├── npm/                   # Installed npm packages (gitignored)
+├── cache/                 # Persisted per-extension state (gitignored)
+├── sessions/              # Session state (gitignored)
+├── settings.json          # Main pi config
+├── mcp.json               # MCP servers (deepwiki, backlog)
+├── models.json            # Custom model providers
+├── web-search.json        # Web search provider choice
+├── keybindings.json       # Key bindings
+├── caveman.json           # Caveman mode settings
+└── trust.json             # Trusted project paths (gitignored, per machine)
 ```
+
+## What travels in git
+
+This directory is one git repo. Tracked files are the config you share between
+machines. Ignored files are secrets or per-machine state.
+
+Tracked:
+
+- config files: `settings.json`, `mcp.json`, `models.json`, `web-search.json`,
+  `keybindings.json`, `caveman.json`
+- `extensions/`, including `patches/` and the apply and regen scripts
+- `skills/`, `themes/`, `prompts/`
+- `bin/tuicr` (the shim only) and `bin/scan-secrets` with its config and test
+
+Ignored on purpose:
+
+- credentials: `auth.json`, `mcp-auth.json`, `models-store.json`
+- `trust.json` (trusted paths differ per machine)
+- `bin/gitleaks` (the binary; install it per machine)
+- `npm/` (node_modules, package.json, package-lock.json) and `git/` (cloned repos)
+- runtime state: `sessions/`, `cache/`, `tmp/`, `missions/`, `sandbox-state/`,
+  `run-history.jsonl`, `mcp.log*`
+- `graph-out/` and `graphify-out/` (regenerable code graphs)
+- the live `backlog/` tree
+
+One quirk to know. `backlog/tasks/pi-001` through `pi-006` were committed before
+`/backlog` was added to `.gitignore`, so git still tracks them. Live backlog state
+and `backlog/config.yml` do not travel. PI-069 tracks the decision to keep or
+untrack the six stale tasks.
+
+## Set up a fresh machine
+
+Prerequisites are Node 26 or newer (`@patimweb/pi-mindplace` requires
+`>=26.0.0`), git, jq, and bash. Optionally install mise, tmux or Zellij, and the
+backlog.md CLI.
+
+1. Clone the repo to `~/.pi`. pi reads its config from `~/.pi`, so the path
+   matters.
+
+	```bash
+	git clone <private-server-url> ~/.pi
+	```
+
+2. Install pi.
+
+	```bash
+	npm install -g @earendil-works/pi-coding-agent
+	# or: mise install npm:@earendil-works/pi-coding-agent
+	```
+
+3. Install every npm package listed in `settings.json`. Run one `pi install` per
+   entry.
+
+	```bash
+	cd ~/.pi
+	node -e 'require("./agent/settings.json").packages.forEach(p => console.log("pi install " + p))' | bash
+	```
+
+	This populates `npm/node_modules/` and writes a fresh `package-lock.json`.
+
+4. Apply the tracked patches. A reinstall wipes patched files, so run this after
+   every `pi install` or `pi update`.
+
+	```bash
+	bash ~/.pi/agent/extensions/apply-all-patches.sh --check   # dry run
+	bash ~/.pi/agent/extensions/apply-all-patches.sh           # apply
+	```
+
+	A CONFLICT means a package version moved past the patch pin. Re-apply the
+	intent by hand, then rebuild the patch with `regen-patch.sh` (see Patches).
+
+5. Create `auth.json` by hand. It is gitignored and never travels. The
+   `opencode-go` and `llama-cpp` entries carry `type` (`api_key`) and `key`. The
+   `llama.cpp` entry also carries `env.LLAMA_BASE_URL`, which must match the
+   network this machine sits on.
+
+6. Install gitleaks at `bin/gitleaks`, or set `GITLEAKS_BIN`. Until the scanner
+   finds gitleaks and jq it exits 127, and `conventional-commits.ts` fails closed,
+   so every pi-mediated commit stays blocked.
+
+7. Install the backlog.md CLI on PATH so the `backlog` MCP server in `mcp.json`
+   works. Install tuicr with `mise install github:agavra/tuicr`, or put
+   `tuicr.real` next to the `bin/tuicr` shim, or set `TUICR_BIN`. The shim exits
+   127 with these same instructions.
+
+8. Let `trust.json` rebuild from trust prompts. Paths from another machine, for
+   example `/home/matthew/...`, never match on a different home directory.
+
+9. Optional pieces. `graph-out/` regenerates from the mindplace build.
+   `models.json` ships no providers; add this machine's providers if needed. If
+   theme verification fails, the schema path in `themes/verify-themes.mjs` is
+   machine-specific, so override it with `PI_THEME_SCHEMA`.
 
 ---
 
@@ -98,6 +194,9 @@ Enforces the conventional commit format on `git commit`.
 | `pi-caveman` | Caveman mode ( terse responses ) |
 | `pi-web-search` | Provider-native `web_search` (keyless) |
 | `@patimweb/pi-mindplace` | Code knowledge graph (`mindplace_query`/`build`/`explain`) |
+| `pi-subagents` | Delegation and scripted multi-agent workflows |
+| `@narumitw/pi-btw` | `/btw` side-question command |
+| `@ff-labs/pi-fff` | Fuzzy file and content search tools (`fffind`, `ffgrep`) |
 
 ### Web search & research
 
@@ -130,10 +229,7 @@ Enforces the conventional commit format on `git commit`.
 | `<leader>p` | Paste image | pi-vim-keys | `ctrl+v` |
 | `<leader>l` | Resume session | pi-vim-keys | *(none)* |
 | `<leader>g` | Open session tree | pi-vim-keys | *(none)* |
-| `alt+escape` | Interrupt operation | pi-vim-keys | `escape` |
-| `ctrl+q` | Exit pi | keybindings.json | `ctrl+d` |
-| `alt+d` | Delete session | keybindings.json | `ctrl+d` |
-| `alt+m` | Open model picker | keybindings.json | `ctrl+l` |
+| `escape`, `alt+escape` | Interrupt the running operation | keybindings.json | `escape` |
 | `ctrl+c` | Clear editor | stock | — |
 | `ctrl+z` | Suspend to background | stock | — |
 | `ctrl+p` | Toggle path display | stock | — |
@@ -147,7 +243,8 @@ Enforces the conventional commit format on `git commit`.
 | `alt+enter` | Queue follow-up | stock | — |
 | `alt+up` | Restore queued messages | stock | — |
 
-
+The tracked `keybindings.json` maps only the interrupt keys. Everything else in
+the table comes from pi defaults or from pi-vim-keys.
 
 ---
 
@@ -155,12 +252,14 @@ Enforces the conventional commit format on `git commit`.
 
 | Skill | Purpose |
 |-------|---------|
-| `coding` | Red-green-refactor TDD discipline |
-| `dig` | Cross-domain root-cause diagnosis |
-| `shaping` | Turn unformed intent into actionable specs |
-| `snapshot` | Task-state snapshots for session handoff |
+| `ask-user` | Structured decision handshake before high-stakes choices |
 | `conventional-commits` | Enforce `type(scope): description` format |
-| `pi-extension-security-review` | Security review of third-party pi packages |
+| `tuicr` | Run tuicr review sessions in cmux, tmux, Zellij, or Herdr |
+
+Skills shipped by npm packages load on their own from `agent/npm`.
+`@whamp/pi-pstack` carries the review and workflow skills (code-review,
+poteto-mode, and the engineering principles). `pi-subagents` carries the
+delegation guides.
 
 ---
 
@@ -217,20 +316,11 @@ modal layer swallows the key.
 
 Status-bar label for the active caveman level.
 
-#### @whamp/pi-pstack 0.9.1 typebox → peerDependencies
-
-**Files:** `extensions/patches/whamp+pi-pstack+0.9.1+typebox-peer.patch`
-(manifest) and `extensions/patches/whamp+pi-pstack+0.9.1+typebox-peer-lock.patch`
-(`package-lock.json`). Split per file so a lock-only conflict can't block the manifest fix.
-
-Silences the extension-loader warning `Host-provided extension packages must be
-declared in peerDependencies with a "*" range, not dependencies: typebox.` — pi
-bundles typebox (1.3.27) and aliases it into extensions; the pinned `dependencies`
-entry hoisted a second copy (1.3.7). Manifest change alone clears the warning (it
-reads only `dependencies`); the lock change keeps `npm ls` consistent.
-
 ### Removed patches
 
+- `@whamp/pi-pstack` 0.9.1 typebox peer patches. The two patch files no longer
+  exist in `extensions/patches/`, and current installs resolve pi-pstack 0.10.1.
+  Dropped from this list on 2026-10-19 (PI-069) because the files are gone.
 - `0xkobold+pi-web` — package uninstalled (stale since PI-028).
 - `pi-ollama+0.1.7` — the host-config change it carried (read
   `~/.pi/agent/cache/pi-ollama-config.json`, resolution order `OLLAMA_HOST` env →
@@ -255,25 +345,25 @@ Key fields:
 | `theme` | `light-distinct/dark-distinct` | Auto-switches, Flexoki user panels |
 | `cavemanMode` | via `caveman.json` | `defaultLevel: "off"` |
 | `packages` | See above | npm packages to load |
-| `extensions` | `vim-keys-patches.ts` | Custom extension loading |
+| `extensions` | empty | No manual entries; pi discovers `agent/extensions/` |
 
 ### models.json
 
-Custom providers:
-
-| Provider | Base URL | API |
-|----------|----------|-----|
-| `llama.cpp` | `http://10.200.0.50:8080/v1` | openai-completions |
+The tracked file holds no providers (`{"providers": {}}`). Providers are per
+machine. The `llama.cpp` endpoint used here is defined in the gitignored
+`auth.json` through `env.LLAMA_BASE_URL`.
 
 ### keybindings.json
 
 ```json
-{ "app.exit": "ctrl+q" }
+{ "app.interrupt": ["escape", "alt+escape"] }
 ```
 
 ### trust.json
 
-Projects with auto-trusted tool execution.
+Projects with auto-trusted tool execution. `trust.json` is gitignored and per
+machine. It rebuilds from trust prompts, and absolute paths from another machine
+never match.
 
 ---
 
