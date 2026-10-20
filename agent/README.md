@@ -51,10 +51,12 @@ Ignored on purpose:
 - `graph-out/` and `graphify-out/` (regenerable code graphs)
 - the live `backlog/` tree
 
-One quirk to know. `backlog/tasks/pi-001` through `pi-006` were committed before
-`/backlog` was added to `.gitignore`, so git still tracks them. Live backlog state
-and `backlog/config.yml` do not travel. PI-069 tracks the decision to keep or
-untrack the six stale tasks.
+The whole `backlog/` tree is ignored. Six tasks, `backlog/tasks/pi-001` through
+`pi-006`, were committed before `/backlog` was added to `.gitignore` and stayed
+tracked by accident. They were untracked on 2026-10-20 with `git rm --cached`, so
+they stay on disk but no longer travel. Live task history does not belong in a
+config repo, since task churn would ride along in every push. Clone a backlog from
+the server that hosts it, not from here.
 
 ### Absolute paths in tracked files
 
