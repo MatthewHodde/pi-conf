@@ -8,6 +8,7 @@
 /agent/models-store.json
 /agent/missions
 /agent/mcp-auth.json
+/agent/crashes.json
 /agent/mcp.log
 /agent/mcp.log.1
 /agent/run-history.jsonl

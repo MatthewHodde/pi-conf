@@ -13,7 +13,7 @@ Custom extensions, skills, and patches for the Pi coding agent.
 ├── skills/                # Custom skill definitions
 ├── themes/                # light-distinct / dark-distinct themes
 ├── prompts/               # Prompt template entry points
-├── bin/                   # scan-secrets scanner; gitleaks binary lives here (gitignored)
+├── bin/                   # scan-secrets scanner (gitleaks comes from PATH, never vendored)
 ├── npm/                   # Installed npm packages (gitignored)
 ├── cache/                 # Persisted per-extension state (gitignored)
 ├── sessions/              # Session state (gitignored)
@@ -101,9 +101,11 @@ backlog.md CLI.
    `llama.cpp` entry also carries `env.LLAMA_BASE_URL`, which must match the
    network this machine sits on.
 
-6. Install gitleaks at `bin/gitleaks`, or set `GITLEAKS_BIN`. Until the scanner
-   finds gitleaks and jq it exits 127, and `conventional-commits.ts` fails closed,
-   so every pi-mediated commit stays blocked.
+6. Install gitleaks so it resolves on `PATH`, and make sure jq is there too. The
+   scanner deliberately keeps no vendored copy and reads no override variable, so
+   `mise install aqua:gitleaks/gitleaks` or your package manager is the fix. Until
+   both resolve, `scan-secrets` exits 127 and `conventional-commits.ts` fails
+   closed, which blocks every pi-mediated commit.
 
 7. Install the backlog.md CLI on PATH so the `backlog` MCP server in `mcp.json`
    works. Install tuicr with `mise install github:agavra/tuicr`, or put
