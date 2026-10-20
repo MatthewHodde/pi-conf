@@ -22,7 +22,6 @@
     "npm:@patimweb/pi-mindplace",
     "npm:pi-subagents",
     "npm:@whamp/pi-pstack",
-    "npm:@narumitw/pi-btw",
     "npm:@ff-labs/pi-fff"
   ],
   "extensions": [],

@@ -221,7 +221,6 @@ Enforces the conventional commit format on `git commit`.
 | `pi-web-search` | Provider-native `web_search` (keyless) |
 | `@patimweb/pi-mindplace` | Code knowledge graph (`mindplace_query`/`build`/`explain`) |
 | `pi-subagents` | Delegation and scripted multi-agent workflows |
-| `@narumitw/pi-btw` | `/btw` side-question command |
 | `@ff-labs/pi-fff` | Fuzzy file and content search tools (`fffind`, `ffgrep`) |
 
 ### Web search & research
