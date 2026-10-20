@@ -43,7 +43,8 @@ Ignored on purpose:
 
 - credentials: `auth.json`, `mcp-auth.json`, `models-store.json`
 - `trust.json` (trusted paths differ per machine)
-- `bin/gitleaks` (the binary; install it per machine)
+- `bin/gitleaks` (never vendored; the scanner resolves gitleaks from `PATH`, so
+  the ignore entry only guards against a stray dropped copy)
 - `npm/` (node_modules, package.json, package-lock.json) and `git/` (cloned repos)
 - runtime state: `sessions/`, `cache/`, `tmp/`, `missions/`, `sandbox-state/`,
   `run-history.jsonl`, `mcp.log*`
@@ -54,6 +55,27 @@ One quirk to know. `backlog/tasks/pi-001` through `pi-006` were committed before
 `/backlog` was added to `.gitignore`, so git still tracks them. Live backlog state
 and `backlog/config.yml` do not travel. PI-069 tracks the decision to keep or
 untrack the six stale tasks.
+
+### Absolute paths in tracked files
+
+Swept 2026-10-20 with `git ls-files | xargs grep` for `/home/`, `~/`,
+`/Users/`, and `/var/folders/`. Everything found falls into three groups, none
+of which breaks on a machine with a different home directory.
+
+- Runtime code reads `process.env.HOME` and only falls back to a literal when
+  `HOME` is unset. `extensions/instance-widget.ts` and
+  `extensions/smolvm-notify.ts` both use `process.env.HOME || "/home/ubuntu"`.
+  The literal is a last-resort sandbox default, never the primary source.
+- Docs and usage examples use the tilde form, `~/.pi/...`, which expands per
+  machine. This covers the `extensions/` scripts (`abort.ts`, `disk-pressure.ts`,
+  `smolvm-aware.ts`, `apply-all-patches.sh`, `regen-patch.sh`), the `tuicr`
+  wrappers, and the `prompts/` templates.
+- `bin/HANDOFF.md` and `extensions/HANDOFF.md` name `/home/matthew/...` and
+  `/home/ubuntu/...` as literal historical paths. Those are narrative records of
+  where a change was made, not path resolution, so they stay as written.
+
+No tracked file resolves a config path from a hardcoded home directory. If a new
+extension needs one, read `HOME` and keep any literal as a fallback only.
 
 ## Set up a fresh machine
 
