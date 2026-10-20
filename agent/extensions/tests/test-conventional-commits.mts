@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import extension, { validate } from "../conventional-commits.ts";
+import extension, { validate, correctSubject } from "../conventional-commits.ts";
 const cases: [string,string,boolean][] = [
   ["clean subject only", "fix: stop push in sandbox", true],
   ["good why body", "feat: add csv export\n\nLarge exports were unreadable uncompressed.", true],
@@ -20,6 +20,26 @@ for (const [name, message, expected] of cases) {
     expected,
     `${name}: expected ok=${expected}, got ok=${result.ok}${result.error ? ` (${result.error})` : ""}`,
   );
+}
+
+// Every correction must itself pass validate(), so one retry always clears.
+const corrections: [string, string | null][] = [
+  ["bad message", "chore: bad message"],
+  ["add csv export", "feat: add csv export"],
+  ["Feat: add export", "feat: add export"],
+  ["feat add export", "feat: add export"],
+  ["Bugfix: stop the loop", "fix: stop the loop"],
+  ["Fixed the push blocker", "fix: fix the push blocker"],
+  ["feat: add export.", "feat: add export"],
+  ["feat(smolvm): block git push in sandbox, only host can push", "feat(smolvm): block git push in sandbox, only"],
+  ["fix: stop push in sandbox", null],
+  ["feat!: remove legacy", null],
+  ["", null],
+];
+for (const [subject, expected] of corrections) {
+  const actual = correctSubject(subject);
+  assert.equal(actual, expected, `correctSubject(${JSON.stringify(subject)})`);
+  if (actual) assert.ok(validate(actual).ok, `corrected line must validate: ${actual}`);
 }
 
 // pi 1.0 event contract: the event carries `input`, and a block returns `{ block, reason }`.
@@ -46,4 +66,15 @@ assert.ok(fire("git commit -m \"bad message\""), "non-conventional subject block
 assert.ok(notices.some(([, m]) => m.includes("Invalid commit")), "invalid subject notifies");
 assert.ok(fire("git commit -m \"chore: update deps\\n\\nCo-Authored-By: Claude <noreply@anthropic.com>\"")?.block, "AI attribution blocks via input.command");
 assert.equal(fire("echo hello"), undefined, "non-commit bash passes");
+
+const blocked = fire('git commit -m "add csv export"') as
+  | { block: boolean; reason: string }
+  | undefined;
+assert.ok(blocked?.block, "unconventional subject blocks");
+assert.match(blocked!.reason, /Subject must look like/, "reason states the exact violation");
+assert.ok(blocked!.reason.includes("```"), "reason fences the corrected line");
+assert.ok(
+  blocked!.reason.includes("feat: add csv export"),
+  "reason carries a corrected subject derived from what the model wrote",
+);
 console.log("event contract => ok");
