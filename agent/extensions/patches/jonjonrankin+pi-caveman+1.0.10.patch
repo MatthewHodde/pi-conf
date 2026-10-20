@@ -1,7 +1,7 @@
 --- a/node_modules/pi-caveman/extensions/caveman.ts
 +++ b/node_modules/pi-caveman/extensions/caveman.ts
-@@ -244,22 +244,7 @@
- 		}
+@@ -250,22 +250,7 @@
+ 		const theme = ctx.ui.theme;
  
  		const anim = ANIMATIONS[level];
 -		const setFrame = (frame: string) => {
