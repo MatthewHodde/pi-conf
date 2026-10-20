@@ -1,0 +1,58 @@
+--- a/node_modules/@patimweb/pi-mindplace/index.ts
++++ b/node_modules/@patimweb/pi-mindplace/index.ts
+@@ -52,7 +52,7 @@
+ 
+     // Filter: skip test/fixture/config files, only real source
+     const skipPatterns = [/^tests?\//, /^__tests__\//, /\.test\./, /\.spec\./, /fixtures/,
+-      /node_modules/, /package\.json/, /tsconfig/, /\.config\./];
++      /node_modules/, /package\.json/, /tsconfig/, /\.config\./, /^graph-out\//, /^graphify-out\//];
+ 
+     const lines: string[] = [];
+     lines.push("## Repository Map (top files by importance)");
+@@ -90,36 +90,21 @@
+ ## Mind Place Knowledge Graph
+ 
+ A knowledge graph of this codebase exists at \`${OUT_DIR}/${GRAPH_FILE}\`.
+-You MUST follow this 3-layer query rule:
+-
+-1. FIRST: Use \`mindplace_query\` to understand code structure, relationships between
+-   entities, or trace how data flows through the codebase. This gives you a scoped
+-   subgraph at a fraction of the tokens.
+-2. SECOND: Use \`mindplace_explain\` to drill into specific entities and see all
+-   their connections.
+-3. THIRD (last resort): Only read raw source files with \`read\` when you need to
+-   see the exact implementation, modify code, or when the graph doesn't have the answer.
+-
+-Important: For any question about the codebase architecture, module relationships,
+-or "how does X work?", query the mind place FIRST. Reading raw files costs 20-100x
+-more tokens than querying the graph.
++For questions about code structure, relationships between entities, or how data
++flows, \`mindplace_query\` returns a scoped subgraph for a fraction of the tokens,
++and \`mindplace_explain\` drills into one entity. Prefer them over reading many
++files in a row. Read source directly when you need the exact implementation,
++are about to edit code, or the graph has no answer. Do not build or rebuild the
++graph unless the user asks.
+ `;
+ 
+ const NO_GRAPH_INSTRUCTIONS = `
+ ## Mind Place Knowledge Graph
+ 
+-No knowledge graph exists yet for this project. You MUST build it immediately
+-before answering any codebase question — no need to ask permission.
+-
+-1. Run \`mindplace_build\` as your very first action when the user asks about
+-   the codebase, architecture, imports, or any source file relationships.
+-2. The build is fast (local tree-sitter parsing, no network or LLM cost) and
+-   will save massive tokens on every subsequent question.
+-3. Do NOT read source files before the graph is built. The graph answers
+-   structural questions at a fraction of the token cost.
+-
+-Once the graph is built, use \`mindplace_query\` / \`mindplace_explain\` before
+-raw file reads.
++No knowledge graph exists for this project yet. \`mindplace_build\` builds one
++locally with tree-sitter, no network and no LLM cost. Building is optional; it
++pays off only when many structural questions follow. Read source files directly
++as needed, and build the graph only when the user asks.
+ `;
+ 
+ export default function (pi: ExtensionAPI) {
