@@ -12,8 +12,8 @@
  * triggers would swap their lines mid-session.
  *
  * The git-wt agent context lives here too, because that is where the worktree
- * facts are read: the extension tells the agent to load the git-wt skill and
- * tracks the worktree the agent cd'd into.
+ * facts are read: the extension gives the agent the mechanical git-wt layout
+ * facts and tracks the worktree the agent cd'd into.
  *
  * The widget is a component rather than a string array, so render() receives
  * the width pi has for it and clamps each line to that, ellipsis included.
@@ -33,6 +33,15 @@ import {
 } from "./lib/claim.ts";
 
 const WIDGET_KEY = "instance";
+
+export const GIT_WT_CONTEXT = `## git-wt worktree layout
+
+Ground truth for "where am I and what worktrees exist": \`git worktree list --porcelain\` — works from any directory. The entry whose next line is \`bare\` is the bare repo; every other entry is a sibling worktree.
+
+- The directory containing \`.bare/\` is the project root and is NOT a work tree: \`git status\`, \`git add\`, \`git commit\`, \`git rev-parse --show-toplevel\` fail there with "this operation must be run in a work tree". \`.bare/\` itself is the bare git repository (the object database).
+- A sibling worktree is a directory like \`<root>/<branch>/\`: one checked-out branch, its \`.git\` file pointing into \`.bare/worktrees/<branch>/\`. Git writes (\`git status\`, \`git add\`, \`git commit\`) work only inside a sibling worktree.
+- \`git log\`, \`git branch --show-current\`, and \`git worktree list --porcelain\` work in every directory.
+- To commit: run \`git worktree list --porcelain\`, \`cd\` into your branch's sibling worktree, then \`git add -A && git commit -m "<message>"\`, then verify with \`git log -1 --oneline\` in that same directory. Never run \`git add\`/\`git commit\` in the root or in \`.bare/\`.`;
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -243,7 +252,7 @@ export default function (pi: ExtensionAPI) {
   pi.on("before_agent_start", async (event) => {
     if (!info.detected) return;
     return {
-      systemPrompt: event.systemPrompt + "\n\n" + "This is a git-wt repo. Load the git-wt skill for worktree management.",
+      systemPrompt: event.systemPrompt + "\n\n" + GIT_WT_CONTEXT,
     };
   });
 
