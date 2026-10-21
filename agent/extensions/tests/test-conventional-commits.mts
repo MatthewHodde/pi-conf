@@ -1,5 +1,8 @@
 import assert from "node:assert/strict";
-import extension, { validate, correctSubject } from "../conventional-commits.ts";
+import { writeFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import extension, { validate, correctSubject, noVerifyAllowed } from "../conventional-commits.ts";
 const cases: [string,string,boolean][] = [
   ["clean subject only", "fix: stop push in sandbox", true],
   ["good why body", "feat: add csv export\n\nLarge exports were unreadable uncompressed.", true],
@@ -182,6 +185,114 @@ assert.equal(
   fire("git reset --hard"),
   undefined,
   "a real invocation still clears after the mention tests",
+);
+
+const NO_VERIFY_REASON = [
+  "Blocked: this commit tries to skip the hooks with --no-verify or -n.",
+  "Hooks are the check: run the commit normally, read what the hook reports, and fix that instead of bypassing it.",
+  "",
+  "After every commit attempt, run `git log -1 --oneline` and confirm your commit landed before moving on.",
+].join("\n");
+const HOOK_REASON = [
+  "Blocked: .git/hooks belongs to the failed, unverified commit:",
+  "```",
+  'git commit -m "chore: wip"',
+  "```",
+  "Do not read or edit the hooks to get past this failure - fix what the commit hook reported, or run `git log -1 --oneline` to see whether the commit landed.",
+  "If git log shows the commit landed and this block persists, run /commit-unlock.",
+  "",
+  "After every commit attempt, run `git log -1 --oneline` and confirm your commit landed before moving on.",
+].join("\n");
+
+const bypass = fire('git commit --no-verify -m "chore: wip"');
+assert.equal(bypass?.block, true, "rule A: --no-verify commit blocks");
+assert.equal(bypass!.reason, NO_VERIFY_REASON, "rule A: literal fix-the-hook reason");
+assert.equal(
+  fire('git commit -n -m "chore: wip"')!.reason,
+  NO_VERIFY_REASON,
+  "rule A: -n commit flag blocks with the same literal reason",
+);
+assert.equal(
+  fire('git commit --no-verify -m "bad message"')!.reason,
+  NO_VERIFY_REASON,
+  "rule A outranks message validation (reason is not the subject error)",
+);
+assert.equal(
+  fire('git commit -m "docs: document --no-verify and .git/hooks"'),
+  undefined,
+  "rule A/B: -m payload naming both needles is data and passes",
+);
+assert.equal(
+  fire('git commit -m "docs: cover -n too"'),
+  undefined,
+  "rule A: bare -n inside the payload passes",
+);
+
+assert.equal(
+  noVerifyAllowed(join(tmpdir(), "pi-07006-missing.json")),
+  false,
+  "missing policy file keeps the bypass block on",
+);
+const policyFile = join(tmpdir(), "pi-07006-policy.json");
+writeFileSync(policyFile, "{ not json");
+assert.equal(noVerifyAllowed(policyFile), false, "malformed policy fails closed");
+writeFileSync(policyFile, JSON.stringify({ allowNoVerify: true }));
+assert.equal(noVerifyAllowed(policyFile), true, "operator switch permits --no-verify");
+rmSync(policyFile);
+assert.equal(
+  noVerifyAllowed(policyFile),
+  false,
+  "switch removal restores the block without restart",
+);
+assert.ok(
+  fire('git commit --no-verify -m "chore: wip"')?.block,
+  "no policy file in the repo keeps the default bypass block on",
+);
+
+fireResult('git commit -m "chore: wip"', true);
+assert.ok(fire("git reset --hard")?.block, "latch armed for the rule B section");
+
+const hookAccess = fire("cat .git/hooks/pre-commit");
+assert.equal(hookAccess?.block, true, "rule B: hook reference blocks while latched");
+assert.equal(hookAccess!.reason, HOOK_REASON, "rule B: literal hooks-belong reason");
+assert.equal(
+  fire("git status && cat .git/hooks/pre-commit")!.reason,
+  HOOK_REASON,
+  "rule B: allowlisted head does not legitimize hook access (pinned chain edge)",
+);
+assert.equal(
+  fire('git commit -m "docs: explain .git/hooks"'),
+  undefined,
+  "rule B: hook words in an allowlisted commit message payload are data while latched",
+);
+assert.ok(
+  fire("chmod +x .git/hooks/*")?.block,
+  "rule B: hook glob blocks while latched",
+);
+assert.equal(
+  fire('git commit --no-verify -m "chore: wip" && cat .git/hooks/pre-commit')!.reason,
+  HOOK_REASON,
+  "precedence: while latched rule B outranks rule A",
+);
+assert.equal(
+  fire('git commit --no-verify -m "chore: wip"')!.reason,
+  NO_VERIFY_REASON,
+  "precedence: allowlisted retry passes the latch, rule A blocks it",
+);
+assert.equal(fire("git log -1 --oneline"), undefined, "recovery git log passes while latched");
+assert.equal(fire("git status"), undefined, "recovery git status passes while latched");
+assert.equal(
+  fire('git commit -m "chore: wip"'),
+  undefined,
+  "compliant retry passes both new rules while latched",
+);
+assert.equal(fire("ls notes.txt"), undefined, "non-git recovery passes while latched");
+
+fireResult('git commit -m "chore: landed"', false);
+assert.equal(
+  fire("cat .git/hooks/pre-commit"),
+  undefined,
+  "rule B is latch-scoped: hook access passes once clear",
 );
 
 console.log("event contract => ok");

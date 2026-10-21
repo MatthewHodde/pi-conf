@@ -268,6 +268,16 @@ function latchEnabled(): boolean {
   }
 }
 
+const POLICY_CONFIG = fileURLToPath(new URL("../commit-policy.json", import.meta.url));
+
+export function noVerifyAllowed(path = POLICY_CONFIG): boolean {
+  try {
+    return JSON.parse(readFileSync(path, "utf-8")).allowNoVerify === true;
+  } catch {
+    return false;
+  }
+}
+
 // Splits on shell separators and quotes so git inside `bash -c "..."` or a chain
 // yields its own tokens, while a bare word in a commit message never follows a
 // `git` token.
@@ -309,6 +319,102 @@ function latchBlockReason(failedCommand: string): string {
   ].join("\n");
 }
 
+const NO_VERIFY_FLAGS: ReadonlySet<string> = new Set(["--no-verify", "-n"]);
+
+// git parses -mn as -m n, so an attached cluster is a message value, not a flag.
+function stripMessagePayloads(command: string): string {
+  const words: string[] = [];
+  let word = "";
+  let quote: string | undefined;
+  const pushWord = () => {
+    if (word) words.push(word);
+    word = "";
+  };
+  for (const ch of command) {
+    if (quote !== undefined) {
+      if (ch === quote) quote = undefined;
+      else word += ch;
+      continue;
+    }
+    if (ch === '"' || ch === "'" || ch === "`") {
+      quote = ch;
+      continue;
+    }
+    if (/\s/.test(ch) || "(;|&<>".includes(ch)) {
+      pushWord();
+      if (!/\s/.test(ch)) words.push(ch);
+      continue;
+    }
+    word += ch;
+  }
+  pushWord();
+
+  const isSeparator = (w: string) => w.length === 1 && "(;|&<>".includes(w);
+  const kept: string[] = [];
+  let segment: string[] = [];
+  let pathspec = false;
+  for (let i = 0; i < words.length; i++) {
+    const w = words[i];
+    if (isSeparator(w)) {
+      kept.push(w);
+      segment = [];
+      pathspec = false;
+      continue;
+    }
+    const hasCommitPair = segment.some((t, j) => t === "git" && segment[j + 1] === "commit");
+    if (!pathspec && hasCommitPair && (w === "-m" || w === "--message")) {
+      if (i + 1 < words.length && !isSeparator(words[i + 1])) i++;
+      continue;
+    }
+    if (!pathspec && hasCommitPair &&
+        ((w.startsWith("-m") && !w.startsWith("--")) || w.startsWith("--message=")))
+      continue;
+    if (w === "--") pathspec = true;
+    kept.push(w);
+    segment.push(w);
+  }
+  return kept.join(" ");
+}
+
+function commitBypassFlag(code: string): string | undefined {
+  const segments = code.split(/([&|;<>()\n]+)/);
+  for (let i = 0; i < segments.length; i += 2) {
+    const tokens = segments[i].split(/[\s'"`]+/).filter(Boolean);
+    if (tokens[0] !== "git" || tokens[1] !== "commit") continue;
+    for (const t of tokens) {
+      if (t === "--") break;
+      if (NO_VERIFY_FLAGS.has(t)) return t;
+    }
+  }
+  return undefined;
+}
+
+function referencesGitHooks(code: string): boolean {
+  return code.includes(".git/hooks");
+}
+
+function noVerifyBlockReason(): string {
+  return [
+    "Blocked: this commit tries to skip the hooks with --no-verify or -n.",
+    "Hooks are the check: run the commit normally, read what the hook reports, and fix that instead of bypassing it.",
+    "",
+    VERIFY_AFTER_BLOCK,
+  ].join("\n");
+}
+
+function hookAccessBlockReason(failedCommand: string): string {
+  return [
+    "Blocked: .git/hooks belongs to the failed, unverified commit:",
+    "```",
+    failedCommand,
+    "```",
+    "Do not read or edit the hooks to get past this failure - fix what the commit hook reported, or run `git log -1 --oneline` to see whether the commit landed.",
+    "If git log shows the commit landed and this block persists, run /commit-unlock.",
+    "",
+    VERIFY_AFTER_BLOCK,
+  ].join("\n");
+}
+
 export default function (pi: ExtensionAPI) {
   // Enforce conventional commits on git commit commands
   pi.on("tool_call", (event, ctx) => {
@@ -317,7 +423,14 @@ export default function (pi: ExtensionAPI) {
     const cmd = event.input?.command;
     if (typeof cmd !== "string") return;
 
+    const code = stripMessagePayloads(cmd);
+
     if (commitLatch.state === "latched" && latchEnabled()) {
+      if (referencesGitHooks(code)) {
+        const reason = hookAccessBlockReason(commitLatch.command);
+        ctx.ui.notify(`❌ Hooks belong to the failed commit:\n${reason}`, "error");
+        return { block: true, reason };
+      }
       const offender = gitSubcommands(cmd).find(sub => !RECOVERY_ALLOWLIST.has(sub));
       if (offender !== undefined) {
         const reason = latchBlockReason(commitLatch.command);
@@ -327,6 +440,13 @@ export default function (pi: ExtensionAPI) {
     }
 
     if (!cmd.includes("git commit")) return;
+
+    const flag = commitBypassFlag(code);
+    if (flag !== undefined && !noVerifyAllowed()) {
+      const reason = noVerifyBlockReason();
+      ctx.ui.notify(`❌ Hook bypass blocked (${flag}):\n${reason}`, "error");
+      return { block: true, reason };
+    }
 
     const scan = scanSecrets();
     if (scan.kind === "findings") {

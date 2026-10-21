@@ -212,6 +212,10 @@ Enforces the conventional commit format on `git commit`.
 - Latches on any non-zero `git commit` and blocks other git commands until `git log -1 --oneline` shows whether it landed
 - `/commit-unlock` clears the latch in place without a restart
 - `agent/commit-latch.json` with `{"enabled": false}` disables the latch; a missing file keeps it on
+- Blocks `git commit` carrying `--no-verify` or `-n`: the reason tells the agent to fix what the hook reports instead of bypassing
+- While the latch is set, blocks any command referencing `.git/hooks` — the hooks belong to the failed commit; `log/status/diff/add/commit` recovery still passes
+- `agent/commit-policy.json` with `{"allowNoVerify": true}` permits `--no-verify`; a missing file keeps the block on (the hook-access rule is governed by the `commit-latch.json` switch)
+- Verifier fixtures (green/red proof for the bypass and hook-file checks): `node agent/extensions/tests/host-07005/verify-fixtures.mjs`
 - Contract test: `node agent/extensions/tests/test-conventional-commits.mts`
 - Host test against a real local model: `bash agent/extensions/tests/host-07002/run.sh`
 - Host test for the failed-commit latch: `bash agent/extensions/tests/host-07005/run.sh`
