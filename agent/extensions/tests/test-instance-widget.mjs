@@ -111,7 +111,7 @@ const tasksDir = join(project, "backlog/tasks");
 const root = makeWorktree();
 process.chdir(root);
 
-const extension = (await import("../instance-widget.ts")).default;
+const { default: extension, GIT_WT_CONTEXT } = await import("../instance-widget.ts");
 extension(pi);
 
 assert.ok(handlers.session_start?.length, "session_start registered");
@@ -128,7 +128,11 @@ assert.ok(
 );
 
 const prompt = await handlers.before_agent_start[0]({ systemPrompt: "base" });
-assert.match(prompt.systemPrompt, /Load the git-wt skill/, "git-wt prompt injected");
+assert.ok(prompt.systemPrompt.includes(GIT_WT_CONTEXT), "git-wt context injected");
+assert.match(prompt.systemPrompt, /git worktree list --porcelain/, "ground-truth command named");
+assert.ok(prompt.systemPrompt.includes(".bare"), "bare repo defined");
+assert.match(prompt.systemPrompt, /sibling worktree/, "sibling worktree defined");
+assert.ok(!prompt.systemPrompt.includes("Load the git-wt skill"), "dead skill pointer gone");
 
 await fire(
   "tool_result",
@@ -259,6 +263,8 @@ idle({
   registerTool() {},
   registerCommand() {},
 });
+const idlePrompt = await idleHandlers.before_agent_start[0]({ systemPrompt: "base" });
+assert.equal(idlePrompt, undefined, "no guidance outside a git-wt repo");
 const emptyProject = mkdtempSync(join(tmpdir(), "instance-widget-empty-"));
 cleanups.push(emptyProject);
 await Promise.all(
