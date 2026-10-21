@@ -171,6 +171,10 @@ worktree path and branch in git-wt repos. No task running here, no task line.
   `tool_call`, which can read the task file before the command finishes writing it
 - Follows the worktree the agent `cd`s into, and in git-wt sessions injects the
   mechanical layout guidance into the system prompt at agent start
+- Blocks `git status`/`git add`/`git commit` at the bare root or inside `.bare`
+  with the recovery sequence (worktree list, cd into the branch worktree,
+  confirm with `git log`), because host-07001 trial evidence showed a weak
+  model read the layout block too late to stop its first command
 - The widget is a component, so `render(width)` clamps each line to the width pi
   gives it: a long task title ends in a dim ellipsis instead of wrapping
 - Contract test: `node agent/extensions/tests/test-instance-widget.mjs`
