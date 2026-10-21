@@ -53,7 +53,9 @@ EOF
   # Heartbeat: a stalled model call must show itself instead of sitting
   # silent until the timeout, and -k guarantees the kill even if pi ignores
   # SIGTERM.
-  (cd "$proj" && PI_CODING_AGENT_DIR="$agent_dir" timeout -k 15s 300 pi --mode json --no-mcp --no-approve \
+  # The model's thinking time runs past five minutes on a good day; a stall
+  # must not masquerade as a missing report (trial 2 of host round 1).
+  (cd "$proj" && PI_CODING_AGENT_DIR="$agent_dir" timeout -k 20s 450 pi --mode json --no-mcp --no-approve \
     --model "$model" "$(cat "$work/prompt-$name.txt")") > "$work/run-$name.jsonl" 2> "$work/run-$name.err" &
   local pi_pid=$!
   local waited=0
