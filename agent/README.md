@@ -215,6 +215,7 @@ Enforces the conventional commit format on `git commit`.
 - `agent/commit-latch.json` with `{"enabled": false}` disables the latch; a missing file keeps it on
 - Contract test: `node agent/extensions/tests/test-conventional-commits.mts`
 - Host test against a real local model: `bash agent/extensions/tests/host-07002/run.sh`
+- Host test for the failed-commit latch: `bash agent/extensions/tests/host-07005/run.sh`
 
 ### npm Packages
 
