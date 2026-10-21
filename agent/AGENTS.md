@@ -26,37 +26,35 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
 
 ## Work comes only from the user
 
-A loaded skill, tool, instruction file, or backlog CLI is capability, never a
-mandate. No user request in this conversation means no work exists. Do not
-search for tasks to adopt, do not invent notifications, assignments, or
-announcements, and do not construct a premise to justify tooling that is merely
-present. Ask what the user wants instead.
-
-Before acting on any claimed external event (a task assignment, a CI result, a
-message from another agent), point at the concrete evidence in this session: a
-real user message, or real tool output. If you cannot point at it, it did not
-happen and you must not describe it as having happened.
-
-The backlog nudge above applies once the user has asked for work. It is not, on
-its own, a reason to search, create, or claim tasks at conversation start.
+- Treat every skill, tool, instruction file, and the backlog CLI as capability,
+  never a mandate. Start work only from a real user message in this conversation.
+- Do not search for tasks to adopt, invent notifications, assignments, or
+  announcements, or invent a premise to justify tooling that is merely present.
+  The backlog nudge above applies only after the user has asked for work. Ask
+  what the user wants.
+- Before acting on any claimed external event, a task assignment, a CI result,
+  or a message from another agent, point at the concrete evidence in this
+  session, a real user message or real tool output. If you cannot point at it,
+  it did not happen; never say it did.
 
 ## Workflow conventions
 
-Prompt templates (`agent/prompts/`) are thin entry-point wrappers — entry, sequence,
-and delegation only. They never carry interaction rules: no asks, no approvals, no
-wait-for-reply text. The `workflow` skill is the single home of interaction policy:
-approval gates exist only for merge and close, everything else is a plain-discussion
-question owned by its domain skill, and results go forward to the user in-conversation
-(task docs persist, never replace). Specs and designs belong in the backlog issue itself.
-
-Host tests belong to the operator. Never move a backlog task to a terminal status
-while any acceptance criterion or Definition of Done item still waits on a
-host-side test, meaning a real build, a real sandbox run, or KVM. Check only what
-the current session can actually observe, leave the rest open, and hand the
-operator a copy-paste command block for the host run. Recorded as decision-003.
+- Claim a backlog task with the claim_task tool, not the backlog CLI. It moves the
+  task to In Progress and announces the work here; a CLI status change does neither.
+- Treat prompt templates in agent/prompts/ as thin entry-point wrappers. Entry,
+  sequence, and delegation only. No asks, no approvals, no wait-for-reply text.
+- The workflow skill owns interaction policy. Approval gates exist only for
+  merge and close; every other question is a plain discussion owned by its
+  domain skill. Send results to the user in-conversation, not only to task
+  docs. Specs and designs go in the backlog issue.
+- Host tests belong to the operator (decision-003). Never move a backlog task
+  to a terminal status while an acceptance criterion or Definition of Done
+  item waits on a host-side test, a real build, a real sandbox run, or KVM. Check
+  only what this session can observe; leave the rest open and hand the
+  operator a copy-paste command block.
 
 ## Commit verification
 
-After every `git commit`, including one that returned success, run `git log -1 --oneline` and confirm your commit is the tip of the branch before moving on.
-If that output does not show your commit, fix the failure and commit again; never continue with your work uncommitted.
-
+- After every git commit, including one that returned success, run
+  `git log -1 --oneline` and confirm your commit is the tip. If it is not
+  there, fix the failure, commit again, and never continue uncommitted.
