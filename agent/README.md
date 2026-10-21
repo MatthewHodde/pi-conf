@@ -238,6 +238,12 @@ prose gate. Both watch `git commit` and both can block.
 - The patch lives in `agent/extensions/patches/agent-ste+0.5.2.patch`, maintained by `agent/extensions/apply-all-patches.sh` and `agent/extensions/regen-patch.sh`
 - Contract test: `node agent/extensions/tests/test-agent-ste.mjs`
 
+#### backlog-terminal-guard.ts
+
+Blocks backlog terminal status moves at the bash `tool_call` boundary.
+
+- Blocks a bash `backlog task edit` move to a terminal status while the named task holds an unchecked operator-only check. Host round 1 of PI-070.04 showed that prose alone did not stop a weak model from forcing the close. The block names the waiting criterion and hands the agent a copy-paste command block for the operator. Create `agent/backlog-terminal-guard.json` with `{"enabled": false}` to turn it off. A missing file keeps it on.
+
 ### npm Packages
 
 | Package | Description |
