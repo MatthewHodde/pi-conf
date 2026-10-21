@@ -190,6 +190,37 @@ assert.match(plainLines()[0], /PI-202/, "the line survives a summary that mentio
 await fire("tool_call", { toolName: "bash", input: { command: "cd feature-x" } }, makeCtx(project));
 assert.match(plainLines().at(-1), /feature-x/, "worktree line follows cd");
 
+// ── Guard: git writes at the bare root are blocked with the recovery steps ──
+
+const bash = async (command) =>
+  (await fire("tool_call", { toolName: "bash", input: { command } }, makeCtx(project)))[0];
+
+assert.equal(await bash(`cd ${root}`), undefined, "cd back to the fixture root is not blocked");
+
+let blocked = await bash("git commit -m x");
+assert.equal(blocked.block, true, "git commit at the bare root is blocked");
+assert.ok(blocked.reason.includes("git worktree list --porcelain"), "the block names the ground-truth command");
+assert.match(blocked.reason, /Blocked: git commit cannot run at the project root/, "the block leads with the failure");
+
+blocked = await bash("git status");
+assert.equal(blocked.block, true, "git status at the bare root is blocked");
+
+blocked = await bash("git add -A");
+assert.equal(blocked.block, true, "git add at the bare root is blocked");
+
+blocked = await bash("git -C .bare commit -m x");
+assert.equal(blocked.block, true, "git commit with a -C into .bare is blocked");
+
+assert.equal(await bash("git log -1 --oneline"), undefined, "git log still runs at the root");
+assert.equal(await bash("git worktree list"), undefined, "git worktree list still runs at the root");
+
+assert.equal(await bash("cd feature-x && git commit -m x"), undefined, "committing inside the worktree is allowed");
+assert.match(plainLines().at(-1), /feature-x/, "the allowed chained commit still tracks the cd");
+
+await bash(`cd ${root}`);
+assert.equal(await bash("git -C feature-x commit -m x"), undefined, "committing via -C into the worktree is allowed");
+assert.equal(plainLines().at(-1).includes("feature-x"), false, "-C alone does not move the tracked cwd");
+
 // ── Clamping to the width the widget is given ─────────────────────────────────
 
 writeFileSync(join(tasksDir, "pi-202 - second task.md"), taskBody("PI-202", "In Progress", "a task title that runs well past any reasonable terminal width"));
@@ -265,6 +296,9 @@ idle({
 });
 const idlePrompt = await idleHandlers.before_agent_start[0]({ systemPrompt: "base" });
 assert.equal(idlePrompt, undefined, "no guidance outside a git-wt repo");
+const idleBash = (command) => idleHandlers.tool_call[0]({ toolName: "bash", input: { command } });
+assert.equal(await idleBash("git commit -m x"), undefined, "no bare-root guard without git-wt detection");
+assert.equal(await idleBash("cd ."), undefined, "cwd tracking still runs its own course");
 const emptyProject = mkdtempSync(join(tmpdir(), "instance-widget-empty-"));
 cleanups.push(emptyProject);
 await Promise.all(
