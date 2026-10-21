@@ -22,7 +22,6 @@ Custom extensions, skills, and patches for the Pi coding agent.
 ├── models.json            # Custom model providers
 ├── web-search.json        # Web search provider choice
 ├── keybindings.json       # Key bindings
-├── caveman.json           # Caveman mode settings
 └── trust.json             # Trusted project paths (gitignored, per machine)
 ```
 
@@ -34,7 +33,7 @@ machines. Ignored files are secrets or per-machine state.
 Tracked:
 
 - config files: `settings.json`, `mcp.json`, `models.json`, `web-search.json`,
-  `keybindings.json`, `caveman.json`
+  `keybindings.json`
 - `extensions/`, including `patches/` and the apply and regen scripts
 - `skills/`, `themes/`, `prompts/`
 - `bin/tuicr` (the shim only) and `bin/scan-secrets` with its config and test
@@ -223,7 +222,6 @@ Enforces the conventional commit format on `git commit`.
 |---------|-------------|
 | `@0xkahi/pi-vim-keys` | Vim keybindings with normal mode, leader keys |
 | `@whamp/pi-pstack` | Poteto-mode skills and playbooks, pstack session commands, `ask_user_question` |
-| `pi-caveman` | Caveman mode ( terse responses ) |
 | `pi-web-search` | Provider-native `web_search` (keyless) |
 | `@patimweb/pi-mindplace` | Code knowledge graph (`mindplace_query`/`build`/`explain`) |
 | `pi-subagents` | Delegation and scripted multi-agent workflows |
@@ -341,14 +339,12 @@ Dry-run status should read `ALREADY applied` for every entry.
 Checks app action keybindings (e.g. alt+escape → `app.interrupt`) before the vim
 modal layer swallows the key.
 
-#### pi-caveman v1.0.8
-
-**File:** `extensions/patches/jonjonrankin+pi-caveman+1.0.8.patch`
-
-Status-bar label for the active caveman level.
-
 ### Removed patches
 
+- `jonjonrankin+pi-caveman` 1.0.10 — package uninstalled 2026-10-21 (PI-076),
+  so the patch target `node_modules/pi-caveman/extensions/caveman.ts` is gone.
+  Static status-bar label instead of the animated frames; the label dies with
+  the package.
 - `@whamp/pi-pstack` 0.9.1 typebox peer patches. The two patch files no longer
   exist in `extensions/patches/`, and current installs resolve pi-pstack 0.10.1.
   Dropped from this list on 2026-10-19 (PI-069) because the files are gone.
@@ -374,7 +370,6 @@ Key fields:
 | `defaultProvider` | `opencode-go` | |
 | `defaultModel` | `mimo-v2.5` | |
 | `theme` | `light-distinct/dark-distinct` | Auto-switches, Flexoki user panels |
-| `cavemanMode` | via `caveman.json` | `defaultLevel: "off"` |
 | `packages` | See above | npm packages to load |
 | `extensions` | empty | No manual entries; pi discovers `agent/extensions/` |
 

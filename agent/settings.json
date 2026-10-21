@@ -17,7 +17,6 @@
   "outputPad": 1,
   "packages": [
     "npm:@0xkahi/pi-vim-keys",
-    "npm:pi-caveman",
     "npm:pi-web-search",
     "npm:@patimweb/pi-mindplace",
     "npm:pi-subagents",
