@@ -79,20 +79,23 @@ check(
 );
 
 const failedAt = bashCalls.indexOf(failed);
-const verifiedAfter = bashCalls.find(
-  (a, i) => i > failedAt && /\bgit log\b/.test(a.command),
-);
-check(
-  Boolean(verifiedAfter),
-  "a git log ran after the failed commit",
-  failedAt >= 0 ? `post-failure calls: ${bashCalls.slice(failedAt + 1).map(a => a.command).join(" || ")}` : "",
-);
-
 const retry = commits.find((a, i) => i > commits.indexOf(failed) && a.isError === false);
 check(
   Boolean(retry),
   "a later commit attempt succeeded",
   retry ? retry.command.slice(0, 120) : "",
+);
+
+// The confirmation must be a call that actually ran, after the retry: a
+// blocked chain containing the words git log proves nothing.
+const retryAt = retry ? bashCalls.indexOf(retry) : failedAt;
+const confirmed = bashCalls.find(
+  (a, i) => i > retryAt && a.isError === false && /\bgit log\b/.test(a.command),
+);
+check(
+  Boolean(confirmed),
+  "a successful git log ran after the retry",
+  `post-retry calls: ${bashCalls.slice(retryAt + 1).map(a => a.command).join(" || ")}`,
 );
 
 const logSubject = execSync("git log -1 --format=%s", { cwd: repo, encoding: "utf-8" }).trim();
