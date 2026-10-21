@@ -39,3 +39,8 @@ host-side test, meaning a real build, a real sandbox run, or KVM. Check only wha
 the current session can actually observe, leave the rest open, and hand the
 operator a copy-paste command block for the host run. Recorded as decision-003.
 
+## Commit verification
+
+After every `git commit`, including one that returned success, run `git log -1 --oneline` and confirm your commit is the tip of the branch before moving on.
+If that output does not show your commit, fix the failure and commit again; never continue with your work uncommitted.
+

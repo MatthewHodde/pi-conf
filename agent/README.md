@@ -210,6 +210,9 @@ Enforces the conventional commit format on `git commit`.
 - Blocks subjects over 50 chars, bodies over 20 lines, and tool/model attribution
 - Subject-rule blocks hand back a copyable corrected subject; body and scan blocks state the fix instead
 - Runs `bin/scan-secrets` first and fails closed when the scanner errors
+- Latches on any non-zero `git commit` and blocks other git commands until `git log -1 --oneline` shows whether it landed
+- `/commit-unlock` clears the latch in place without a restart
+- `agent/commit-latch.json` with `{"enabled": false}` disables the latch; a missing file keeps it on
 - Contract test: `node agent/extensions/tests/test-conventional-commits.mts`
 - Host test against a real local model: `bash agent/extensions/tests/host-07002/run.sh`
 
