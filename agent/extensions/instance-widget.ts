@@ -149,6 +149,57 @@ function getWorktreeDirs(root: string): string[] {
   }
 }
 
+const ROOT_GIT_BLOCKS = new Set(["status", "add", "commit"]);
+
+// status/add/commit at the bare root always fail with the work-tree fatal
+// (matrix-verified), so this block can never stop a command that would have
+// worked; the block is git's own error made actionable at the point of failure.
+function bareRootGitBlock(cmd: string, root: string, currentCwd: string): string | null {
+  const bare = join(root, ".bare");
+  let cwd = currentCwd;
+  for (const segment of cmd.split(/\s*(?:&&|\|\||;|\|)\s*/)) {
+    // Same cd rule as the tracker below: first cd match, absolute or resolved
+    // against the current cwd, and only an existing directory counts.
+    const cdMatch = segment.match(/(?:^|\s)cd\s+([^\s;&|]+)/);
+    if (cdMatch) {
+      const resolved = cdMatch[1].startsWith("/") ? cdMatch[1] : join(cwd, cdMatch[1]);
+      try {
+        if (statSync(resolved).isDirectory()) cwd = resolved;
+      } catch {
+        // Invalid path, ignore — the tracker would not move either
+      }
+    }
+
+    const tokens = segment.split(/\s+/).filter(Boolean);
+    if (tokens[0] !== "git") continue;
+    let location = cwd;
+    let i = 1;
+    while (i < tokens.length) {
+      if (tokens[i] === "-c") {
+        i += 2;
+        continue;
+      }
+      if (tokens[i] === "-C" && tokens[i + 1] !== undefined) {
+        const target = tokens[i + 1];
+        location = target.startsWith("/") ? target : join(cwd, target);
+        i += 2;
+        continue;
+      }
+      break;
+    }
+    const sub = tokens[i];
+    if (sub === undefined || !ROOT_GIT_BLOCKS.has(sub)) continue;
+    if (location === root || location === bare || location.startsWith(bare + "/")) {
+      return [
+        `Blocked: git ${sub} cannot run at the project root; the root is not a work tree and .bare is the bare repo.`,
+        "Run: git worktree list --porcelain",
+        "Then cd into your branch worktree and retry; confirm with: git log -1 --oneline",
+      ].join("\n");
+    }
+  }
+  return null;
+}
+
 // ── Width clamping ──────────────────────────────────────────────────────────────
 
 const ANSI = "\\x1b\\[[0-9;?]*[ -/]*[@-~]";
@@ -279,6 +330,11 @@ export default function (pi: ExtensionAPI) {
 
     if (event.toolName === "bash") {
       const cmd = event.input.command || "";
+
+      if (info.root) {
+        const blocked = bareRootGitBlock(cmd, info.root, currentCwd);
+        if (blocked) return { block: true, reason: blocked };
+      }
 
       const cdMatch = cmd.match(/(?:^|\s|\|\||&&|;)\s*cd\s+([^\s;&|]+)/);
       if (cdMatch) {
