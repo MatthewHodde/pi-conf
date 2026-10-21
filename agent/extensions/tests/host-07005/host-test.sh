@@ -6,7 +6,8 @@ test_body() {
   local here out rc work passes t
   here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-  out="$(bash "$here/run.sh" 2>&1)"
+  set -o pipefail
+  out="$(bash "$here/run.sh" 2>&1 | tee >(cat >&2))"
   rc=$?
   echo "$out"
   if [ "$rc" -ne 0 ]; then
