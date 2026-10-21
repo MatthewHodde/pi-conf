@@ -1,5 +1,6 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { execSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const SCANNER = fileURLToPath(new URL("../bin/scan-secrets", import.meta.url));
@@ -228,6 +229,11 @@ export function validate(message: string): ValidationResult {
   return other ? { ok: false, error: other } : { ok: true };
 }
 
+// Appended to every guard block: a blocked attempt still leaves the model
+// about to retry, and that retry must end in verification.
+const VERIFY_AFTER_BLOCK =
+  "After every commit attempt, run `git log -1 --oneline` and confirm your commit landed before moving on.";
+
 function blockReason(result: ValidationResult): string {
   const parts = [result.error ?? "Invalid commit message."];
   if (result.correctedSubject) {
@@ -239,8 +245,68 @@ function blockReason(result: ValidationResult): string {
       "```",
     );
   }
-  parts.push("", "See skill:conventional-commits for format rules.");
+  parts.push("", "See skill:conventional-commits for format rules.", "", VERIFY_AFTER_BLOCK);
   return parts.join("\n");
+}
+
+// In-memory by design: session restart is the backstop, so no stale-latch file.
+type CommitLatch = { state: "clear" } | { state: "latched"; command: string };
+let commitLatch: CommitLatch = { state: "clear" };
+
+// Diagnosis and retry only; destructive git (reset/checkout) and push stay blocked.
+const RECOVERY_ALLOWLIST = new Set(["log", "status", "diff", "add", "commit"]);
+
+const LATCH_CONFIG = fileURLToPath(new URL("../commit-latch.json", import.meta.url));
+
+// Read at decision time so an operator edit applies without a restart.
+// Missing or unreadable keeps the mechanism on.
+function latchEnabled(): boolean {
+  try {
+    return JSON.parse(readFileSync(LATCH_CONFIG, "utf-8")).enabled !== false;
+  } catch {
+    return true;
+  }
+}
+
+// Splits on shell separators and quotes so git inside `bash -c "..."` or a chain
+// yields its own tokens, while a bare word in a commit message never follows a
+// `git` token.
+function gitSubcommands(command: string): string[] {
+  const tokens = command.split(/[\s;&|()<>'"`]+/).filter(Boolean);
+  const subs: string[] = [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (tokens[i] !== "git") continue;
+    // A trailing bare `git` is an attempt too, hence the empty subcommand.
+    subs.push(i + 1 < tokens.length ? tokens[i + 1] : "");
+  }
+  return subs;
+}
+
+// True when a shell segment starts with `git commit` (`git commit`,
+// `cd x && git commit`), so a command that merely mentions the phrase in a
+// pattern or string never counts as a commit.
+function isCommitInvocation(command: string): boolean {
+  const segments = command.split(/([&|;<>()\n]+)/);
+  for (let i = 0; i < segments.length; i += 2) {
+    const tokens = segments[i].split(/[\s'"`]+/).filter(Boolean);
+    if (tokens[0] === "git" && tokens[1] === "commit") return true;
+  }
+  return false;
+}
+
+function latchBlockReason(failedCommand: string): string {
+  return [
+    "Blocked: your previous git commit failed and is still unverified:",
+    "```",
+    failedCommand,
+    "```",
+    "Run exactly this to check whether it landed:",
+    "```",
+    "git log -1 --oneline",
+    "```",
+    "Then retry the git action you wanted, or fix the failure and re-run the commit.",
+    "If git log shows the commit landed and this block persists, run /commit-unlock.",
+  ].join("\n");
 }
 
 export default function (pi: ExtensionAPI) {
@@ -249,21 +315,32 @@ export default function (pi: ExtensionAPI) {
     if (event.toolName !== "bash") return;
 
     const cmd = event.input?.command;
-    if (typeof cmd !== "string" || !cmd.includes("git commit")) return;
+    if (typeof cmd !== "string") return;
+
+    if (commitLatch.state === "latched" && latchEnabled()) {
+      const offender = gitSubcommands(cmd).find(sub => !RECOVERY_ALLOWLIST.has(sub));
+      if (offender !== undefined) {
+        const reason = latchBlockReason(commitLatch.command);
+        ctx.ui.notify(`❌ Unverified commit:\n${reason}`, "error");
+        return { block: true, reason };
+      }
+    }
+
+    if (!cmd.includes("git commit")) return;
 
     const scan = scanSecrets();
     if (scan.kind === "findings") {
       ctx.ui.notify(`❌ Secrets in commit set:\n${scan.findings}`, "error");
       return {
         block: true,
-        reason: `Secret scanner found secrets:\n${scan.findings}\n\nFix the files or drop them from the commit, then retry.`,
+        reason: `Secret scanner found secrets:\n${scan.findings}\n\nFix the files or drop them from the commit, then retry.\n\n${VERIFY_AFTER_BLOCK}`,
       };
     }
     if (scan.kind === "error") {
       ctx.ui.notify(`❌ Secret scan failed: ${scan.reason}`, "error");
       return {
         block: true,
-        reason: `Secret scan failed: ${scan.reason}\n\nFix or restore the scanner, then retry.`,
+        reason: `Secret scan failed: ${scan.reason}\n\nFix or restore the scanner, then retry.\n\n${VERIFY_AFTER_BLOCK}`,
       };
     }
 
@@ -276,5 +353,28 @@ export default function (pi: ExtensionAPI) {
       ctx.ui.notify(`❌ Invalid commit:\n${result.error}`, "error");
       return { block: true, reason: blockReason(result) };
     }
+  });
+
+  pi.on("tool_result", (event) => {
+    if (event.toolName !== "bash") return;
+    const cmd = event.input?.command;
+    if (typeof cmd !== "string" || !cmd.includes("git commit")) return;
+    if (!latchEnabled()) return;
+    if (event.isError) {
+      // Broad on purpose: an over-eager latch is cleared by the next real
+      // commit, while a missed arm loses the work outright.
+      commitLatch = { state: "latched", command: cmd };
+      return;
+    }
+    // Release only on a commit that actually ran; a grep exit 0 is not one.
+    if (isCommitInvocation(cmd)) commitLatch = { state: "clear" };
+  });
+
+  pi.registerCommand("commit-unlock", {
+    description: "Clear the failed-commit latch",
+    handler: async (_args, ctx) => {
+      commitLatch = { state: "clear" };
+      ctx.ui.notify("Commit latch cleared.", "info");
+    },
   });
 }
