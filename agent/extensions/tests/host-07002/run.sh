@@ -1,13 +1,11 @@
 #!/usr/bin/env bash
-# Host convergence test for PI-070.02 AC #3: a weak model blocked once by the
-# conventional-commits guard succeeds on the immediately following commit attempt.
 # Needs pi on PATH and the llama.cpp Qwen3.5-9B endpoint configured in this
 # repo's agent dir (models-store.json + auth.json).
 set -uo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# The repo IS the agent config: resolving it from the script location tests this
-# checkout's guard, credentials, and extensions rather than whatever ~/.pi holds.
+# Resolve the agent dir from the script location so the harness tests this
+# checkout's guard and credentials, not whatever ~/.pi happens to hold.
 agent_dir="$(cd "$here/../../.." && pwd)"
 model="llama.cpp/Qwen_Qwen3.5-9B-Q4_K_M"
 work="$(mktemp -d /tmp/pi-07002.XXXXXX)"
@@ -37,8 +35,18 @@ Do not edit files and do not read files.
 EOF
 
   # --no-mcp: MCP tools are irrelevant to the guard and add nondeterministic startup.
-  (cd "$repo" && PI_CODING_AGENT_DIR="$agent_dir" timeout 600 pi --mode json --no-mcp --no-approve \
-    --model "$model" "$(cat "$work/prompt-$name.txt")") > "$work/run-$name.jsonl" 2> "$work/run-$name.err"
+  # Heartbeat: a stalled model call must show itself instead of sitting silent
+  # until the timeout, and -k guarantees the kill even if pi ignores SIGTERM.
+  (cd "$repo" && PI_CODING_AGENT_DIR="$agent_dir" timeout -k 15s 300 pi --mode json --no-mcp --no-approve \
+    --model "$model" "$(cat "$work/prompt-$name.txt")") > "$work/run-$name.jsonl" 2> "$work/run-$name.err" &
+  local pi_pid=$!
+  local waited=0
+  while kill -0 "$pi_pid" 2>/dev/null; do
+    [ "$waited" -gt 0 ] && echo "  trial $name still running after ${waited}s"
+    sleep 30
+    waited=$((waited + 30))
+  done
+  wait "$pi_pid"
   local run_status=$?
 
   node "$here/verify.mjs" "$work/run-$name.jsonl" "$invalid" "$corrected" "$repo"

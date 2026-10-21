@@ -208,7 +208,7 @@ Monitors disk usage in smolvm sandboxes.
 Enforces the conventional commit format on `git commit`.
 
 - Blocks subjects over 50 chars, bodies over 20 lines, and tool/model attribution
-- Every block states the violation and hands back a copyable corrected subject, so one retry converges
+- Subject-rule blocks hand back a copyable corrected subject; body and scan blocks state the fix instead
 - Runs `bin/scan-secrets` first and fails closed when the scanner errors
 - Contract test: `node agent/extensions/tests/test-conventional-commits.mts`
 - Host test against a real local model: `bash agent/extensions/tests/host-07002/run.sh`
