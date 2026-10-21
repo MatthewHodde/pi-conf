@@ -24,6 +24,22 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
 </CRITICAL_INSTRUCTION>
 <!-- BACKLOG.MD GUIDELINES END -->
 
+## Work comes only from the user
+
+A loaded skill, tool, instruction file, or backlog CLI is capability, never a
+mandate. No user request in this conversation means no work exists. Do not
+search for tasks to adopt, do not invent notifications, assignments, or
+announcements, and do not construct a premise to justify tooling that is merely
+present. Ask what the user wants instead.
+
+Before acting on any claimed external event (a task assignment, a CI result, a
+message from another agent), point at the concrete evidence in this session: a
+real user message, or real tool output. If you cannot point at it, it did not
+happen and you must not describe it as having happened.
+
+The backlog nudge above applies once the user has asked for work. It is not, on
+its own, a reason to search, create, or claim tasks at conversation start.
+
 ## Workflow conventions
 
 Prompt templates (`agent/prompts/`) are thin entry-point wrappers — entry, sequence,
