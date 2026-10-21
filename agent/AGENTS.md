@@ -48,9 +48,9 @@ Do not edit Backlog task, draft, document, decision, or milestone markdown files
   domain skill. Send results to the user in-conversation, not only to task
   docs. Specs and designs go in the backlog issue.
 - Host tests belong to the operator (decision-003). Never move a backlog task
-  to a terminal status while an acceptance criterion or Definition of Done
-  item waits on a host-side test, a real build, a real sandbox run, or KVM. Check
-  only what this session can observe; leave the rest open and hand the
+  to Done while an acceptance criterion or Definition of Done item waits on a
+  check only the operator can run, a real build, a real sandbox run, or KVM.
+  Check only what this session can observe, leave the rest open, and hand the
   operator a copy-paste command block.
 
 ## Commit verification
