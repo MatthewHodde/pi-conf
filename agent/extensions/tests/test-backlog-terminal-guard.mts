@@ -161,5 +161,20 @@ assert.equal(parseTerminalTransition("backlog task edit TASK-1 -s In"), null, "-
 assert.equal(backlogTerminalBlock("backlog task edit TASK-1 -s done", project), blocked!.reason,
   "backlogTerminalBlock is the pure path the handler uses");
 
+// ── Host round 3: weak model hunted past the verb check ────────────────────
+
+writeTask(HOST_AC);
+const HUNT = "backlog task update TASK-1 --plain --status Done --summary Update the notes";
+assert.deepEqual(
+  parseTerminalTransition(HUNT),
+  { id: "TASK-1" },
+  "host round 3: id parsed by shape despite the unknown verb update",
+);
+assert.ok(fire(HUNT)?.block, "host round 3: update with a terminal status blocks");
+assert.ok(fire("backlog task set TASK-1 --status done")?.block, "invented verb blocks");
+assert.ok(fire("backlog task TASK-1 -s done")?.block, "bare id after task blocks");
+assert.equal(fire("backlog task list --status done"), undefined, "list status filter is a read, passes");
+assert.equal(fire("backlog task archive TASK-1"), undefined, "archive without a terminal flag passes");
+
 rmSync(project, { recursive: true, force: true });
 console.log("backlog-terminal-guard: all paths => ok");

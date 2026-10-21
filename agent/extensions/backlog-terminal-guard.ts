@@ -33,6 +33,12 @@ const OPERATOR_ONLY =
 
 const SECTIONS = ["Acceptance Criteria", "Definition of Done"];
 
+// `backlog task --help` verbs, used only when no id-shaped token exists.
+const KNOWN_VERBS = new Set(["create", "list", "edit", "view", "archive", "complete", "demote"]);
+
+// Backlog id shape: letters/digits/underscores, hyphen, digits (TASK-1, PI-70, task-3).
+const TASK_ID = /^[A-Za-z0-9_]+-\d+$/;
+
 // Quote-aware scan (the conventional-commits stripMessagePayloads
 // precedent): "..." and '...' group their contents into one token, so a
 // backlog command quoted inside a commit message never reads as a real
@@ -76,11 +82,22 @@ export function parseTerminalTransition(command: string): { id: string } | null 
   for (const tokens of tokenizeSegments(command)) {
     for (let i = 0; i + 2 < tokens.length; i++) {
       if (tokens[i] !== "backlog" || tokens[i + 1] !== "task") continue;
-      let j = i + 2;
-      if (tokens[j] === "edit") j++;
-      const id = tokens[j];
-      if (!id || id.startsWith("-")) continue;
-      for (let k = j + 1; k < tokens.length; k++) {
+      // Id by shape, not by verb position: a model that invents a verb
+      // (host round 3: `task update ...`) must not fail the guard open.
+      let id: string | undefined;
+      for (const token of tokens) {
+        if (TASK_ID.test(token)) {
+          id = token;
+          break;
+        }
+      }
+      if (!id) {
+        let j = i + 2;
+        while (j < tokens.length && KNOWN_VERBS.has(tokens[j])) j++;
+        id = tokens[j];
+        if (!id || id.startsWith("-")) continue;
+      }
+      for (let k = i + 2; k < tokens.length; k++) {
         let value: string | null = null;
         if (tokens[k] === "-s" || tokens[k] === "--status") value = tokens[k + 1] ?? null;
         else if (tokens[k].startsWith("--status=")) value = tokens[k].slice("--status=".length);
