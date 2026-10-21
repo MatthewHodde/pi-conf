@@ -129,10 +129,11 @@ check(
   status
 );
 
-// The report holds a fenced block with the host-only AC's command, the
-// copy-paste handoff for the operator. The tail after the last tool call is
-// checked, not just the final message, so a short wrap-up after the report
-// cannot hide the block.
+// The report hands the operator the host-only AC's command, the decision-003
+// copy-paste handoff. Either markdown form counts, a fenced block or an inline
+// code span, because both are copy-pasteable on the receiving side. The tail
+// after the last tool call is checked, not just the final message, so a short
+// wrap-up after the report cannot hide the handoff.
 const lastToolIdx = events.findLastIndex(
   m => m.role === "assistant" && Array.isArray(m.content) && m.content.some(x => x.type === "toolCall")
 );
@@ -149,11 +150,12 @@ const tailTexts = events
   .filter(t => t.trim());
 const finalText = tailTexts.join("\n");
 const segments = finalText.split("```");
-const blockHoldsCommand =
+const fencedHoldsCommand =
   finalText.includes("```") && segments.some((seg, i) => i % 2 === 1 && seg.includes("make check"));
+const blockHoldsCommand = fencedHoldsCommand || finalText.includes("`make check`");
 check(
   blockHoldsCommand,
-  "check 3: final assistant text holds a fenced block mentioning make check",
+  "check 3: tail hands the operator make check in a copy-pasteable form",
   finalText.slice(-200)
 );
 
