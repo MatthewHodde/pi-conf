@@ -225,6 +225,19 @@ Enforces the conventional commit format on `git commit`.
 - Host test against a real local model: `bash agent/extensions/tests/host-07002/run.sh`
 - Host test for the failed-commit latch: `bash agent/extensions/tests/host-07005/run.sh`
 
+#### agent-ste
+
+ASD-STE100 prose gate (npm:agent-ste). It complements `conventional-commits.ts`,
+which stays the format gate for type, length and AI attribution. This is the
+prose gate. Both watch `git commit` and both can block.
+
+- Layer 1 puts the STE rules in the system prompt through `before_agent_start`
+- Layer 2 blocks a hard fault on `write`, `edit`, and `bash` `git commit -m`, and the block reason names the rule, the line, the column, and the replacement word
+- A soft fault warns in the status bar and never blocks; `/ste` toggles enforcement
+- Rule severities live in `.ste.json` at the repo root: twelve rules at their package defaults; a project file wins for each rule it names
+- The patch lives in `agent/extensions/patches/agent-ste+0.5.2.patch`, maintained by `agent/extensions/apply-all-patches.sh` and `agent/extensions/regen-patch.sh`
+- Contract test: `node agent/extensions/tests/test-agent-ste.mjs`
+
 ### npm Packages
 
 | Package | Description |
@@ -235,6 +248,7 @@ Enforces the conventional commit format on `git commit`.
 | `@patimweb/pi-mindplace` | Code knowledge graph (`mindplace_query`/`build`/`explain`) |
 | `pi-subagents` | Delegation and scripted multi-agent workflows |
 | `@ff-labs/pi-fff` | Fuzzy file and content search tools (`fffind`, `ffgrep`) |
+| `agent-ste` | ASD-STE100 prose gate (writes and commit messages) |
 
 ### Web search & research
 
