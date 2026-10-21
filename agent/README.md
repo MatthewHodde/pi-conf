@@ -169,7 +169,8 @@ worktree path and branch in git-wt repos. No task running here, no task line.
   discovery skips because it has no `index.ts`
 - Read from backlog tool results (MCP and CLI), after the result rather than on
   `tool_call`, which can read the task file before the command finishes writing it
-- Follows the worktree the agent `cd`s into and injects the git-wt skill prompt
+- Follows the worktree the agent `cd`s into, and in git-wt sessions injects the
+  mechanical layout guidance into the system prompt at agent start
 - The widget is a component, so `render(width)` clamps each line to the width pi
   gives it: a long task title ends in a dim ellipsis instead of wrapping
 - Contract test: `node agent/extensions/tests/test-instance-widget.mjs`
