@@ -252,6 +252,15 @@ Blocks direct `write` and `edit` calls under the project `backlog/` directories 
 - Bash commands stay out of scope for now. `backlog-terminal-guard.ts` covers backlog terminal moves at the bash boundary.
 - Contract test: `node agent/extensions/tests/test-backlog-edit-guard.mts`
 
+#### heredoc-write-guard.ts
+
+Blocks bash heredoc file writes so weak models use the pi write and edit tools (PI-083).
+
+- Blocks a bash `tool_call` whose command line opens a heredoc and also writes a file. The write comes from a redirect (`> file`, `>> file`) or from `tee file`. The block reason names the pi write tool and the edit tool with a sample input for each.
+- Heredoc body lines never count as writes, so a body that contains `a > b` stays allowed. A heredoc that only feeds stdin to a command, such as `python3 - <<EOF`, stays allowed. A redirect to `/dev/null` and a stderr redirect such as `2> err.log` stay allowed.
+- Create `agent/heredoc-guard.json` with `{"enabled": false}` to turn it off. A missing file keeps it on.
+- Contract test: `node agent/extensions/tests/test-heredoc-write-guard.mts`
+
 ### npm Packages
 
 | Package | Description |
