@@ -147,6 +147,24 @@ backlog.md CLI.
 
 ## Extensions
 
+### Guards
+
+Seven guards block a `tool_call` before it runs. Every guard is on by default. The table names what each guard blocks and how to turn it off.
+
+| Guard | Blocks | Turn it off |
+|-------|--------|-------------|
+| `heredoc-write-guard.ts` | A bash heredoc that writes a file through a redirect or `tee` | `echo '{"enabled": false}' > agent/heredoc-guard.json` |
+| `backlog-edit-guard.ts` | A `write` or `edit` call that lands inside `backlog/` or `.backlog/` | `echo '{"enabled": false}' > agent/backlog-edit-guard.json` |
+| `backlog-terminal-guard.ts` | A `backlog task edit` move to a terminal status while a check waits | `echo '{"enabled": false}' > agent/backlog-terminal-guard.json` |
+| `conventional-commits.ts` | Bad commit messages, secrets in the commit set, `--no-verify`, git commands after a failed commit | `echo '{"enabled": false}' > agent/commit-latch.json` for the latch, `echo '{"allowNoVerify": true}' > agent/commit-policy.json` for the bypass flag |
+| `agent-ste` | A hard Simplified Technical English fault on `write`, `edit`, `git commit -m` | Run `/ste off` for this session |
+| `smolvm-aware.ts` | `git push` inside a smolvm sandbox | It registers only when `SMOLVM=1`, so no switch is needed outside a sandbox |
+| `instance-widget.ts` | `git status`, `git add`, `git commit` at a bare repository root | No switch. It loads with the widget |
+
+Notes on two guards. `conventional-commits.ts` has no switch for message format or the secret scanner, so those parts run on every `git commit`. Run `/commit-unlock` to clear the post-failure latch in place. `deepwiki-guard.ts` carries the guard name but never blocks a call.
+
+Config files are read when a guard decides, so your edit applies without a restart. A missing file keeps the guard on. The `####` entries below hold the full behavior and the contract test for each guard.
+
 ### Custom (TypeScript)
 
 #### instance-widget.ts
@@ -258,7 +276,13 @@ Blocks bash heredoc file writes so weak models use the pi write and edit tools (
 
 - Blocks a bash `tool_call` whose command line opens a heredoc and also writes a file. The write comes from a redirect (`> file`, `>> file`) or from `tee file`. The block reason names the pi write tool and the edit tool with a sample input for each.
 - Heredoc body lines never count as writes, so a body that contains `a > b` stays allowed. A heredoc that only feeds stdin to a command, such as `python3 - <<EOF`, stays allowed. A redirect to `/dev/null` and a stderr redirect such as `2> err.log` stay allowed.
-- Create `agent/heredoc-guard.json` with `{"enabled": false}` to turn it off. A missing file keeps it on.
+- To turn the guard off, create `agent/heredoc-guard.json` with `{"enabled": false}`:
+
+  ```bash
+  echo '{"enabled": false}' > agent/heredoc-guard.json
+  ```
+
+  A missing file keeps the guard on. The file is read at decision time, so the edit applies without a restart.
 - Contract test: `node agent/extensions/tests/test-heredoc-write-guard.mts`
 
 ### npm Packages
