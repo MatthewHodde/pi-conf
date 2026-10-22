@@ -244,6 +244,14 @@ Blocks backlog terminal status moves at the bash `tool_call` boundary.
 
 - Blocks a bash `backlog task edit` move to a terminal status while the named task holds an unchecked operator-only check. Host round 1 of PI-070.04 showed that prose alone did not stop a weak model from forcing the close. The block names the waiting criterion and hands the agent a copy-paste command block for the operator. Create `agent/backlog-terminal-guard.json` with `{"enabled": false}` to turn it off. A missing file keeps it on.
 
+#### backlog-edit-guard.ts
+
+Blocks direct `write` and `edit` calls under the project `backlog/` directories (PI-080).
+
+- Blocks a `write` or `edit` tool call that resolves inside `backlog/` or `.backlog/` of a Backlog.md project. The guard walks up from `PROJECT_PATH` and the current working directory. It fires only when the ancestor holds backlog config or a tasks directory. Other `backlog/` folders stay writable. The block reason points the agent at `backlog task view/edit/create` instead. Create `agent/backlog-edit-guard.json` with `{"enabled": false}` to turn it off, and a missing file keeps it on.
+- Bash commands stay out of scope for now. `backlog-terminal-guard.ts` covers backlog terminal moves at the bash boundary.
+- Contract test: `node agent/extensions/tests/test-backlog-edit-guard.mts`
+
 ### npm Packages
 
 | Package | Description |
