@@ -10,6 +10,14 @@ export const POTETO_SKILL_PATH = fileURLToPath(POTETO_SKILL_URL);
 
 export const POTETO_PLAYBOOKS_DIR = fileURLToPath(new URL("playbooks/", POTETO_SKILL_URL));
 
+const NUDGE_OFF_VALUES = new Set(["0", "false", "no", "off"]);
+
+export function nudgeDisabled(env: NodeJS.ProcessEnv = process.env): boolean {
+  const raw = env.PI_POTETO_NUDGE;
+  if (raw === undefined) return false;
+  return NUDGE_OFF_VALUES.has(raw.trim().toLowerCase());
+}
+
 const PLAYBOOK_TRIGGERS: readonly (readonly [string, string])[] = [
   ["Read-only question about how or why something works", "investigation.md"],
   ["Reported defect to reproduce, root-cause, and fix", "bug-fix.md"],
@@ -62,6 +70,11 @@ Second tool call: read the playbook that matches this task. The match table sits
 Then do the task. Copy the playbook steps into the todolist before your first edit.`;
 
 export default function (pi: ExtensionAPI) {
+  // PI_POTETO_NUDGE=off skips both handlers: the system block and the task-turn
+  // message. Env vars are read-only for the process lifetime, so a factory guard
+  // costs nothing per turn when off.
+  if (nudgeDisabled()) return;
+
   // Chain-append, same as host-tests-pointer.ts: the deepwiki-guard force-chain
   // re-derives the prompt every run, so chaining is the order-invariant path.
   pi.on("before_agent_start", async (event) => ({

@@ -5,20 +5,32 @@ import extension, {
   POTETO_PLAYBOOK_POINTER,
   POTETO_PLAYBOOKS_DIR,
   POTETO_SKILL_PATH,
+  nudgeDisabled,
 } from "../poteto-playbook-pointer.ts";
 
+assert.equal(nudgeDisabled({}), false, "unset PI_POTETO_NUDGE keeps the nudge on");
+assert.equal(
+  nudgeDisabled({ PI_POTETO_NUDGE: "on" }),
+  false,
+  "unrecognized values keep the nudge on",
+);
+for (const value of ["0", "false", "FALSE", "no", "off", " Off "]) {
+  assert.equal(nudgeDisabled({ PI_POTETO_NUDGE: value }), true, `${value} disables the nudge`);
+}
+
 const handlers = {};
-extension({
+const pi = {
   on(name, fn) {
     (handlers[name] ??= []).push(fn);
   },
   registerTool() {},
   registerCommand() {},
-});
+};
+extension(pi);
 
 assert.ok(
   handlers.before_agent_start?.length,
-  "before_agent_start handler registered unconditionally (factory has no env guard)",
+  "before_agent_start handlers register when PI_POTETO_NUDGE is unset",
 );
 
 const results = [];
@@ -85,5 +97,24 @@ assert.ok(
 );
 const customRun = await nudgeHandler({ systemPrompt: "base", messageType: "custom" });
 assert.equal(customRun, undefined, "nudge skips runs started by custom messages");
+
+process.env.PI_POTETO_NUDGE = "off";
+const disabled = {};
+const disabledExtension = (
+  await import(`../poteto-playbook-pointer.ts?disabled=${Date.now()}`)
+).default;
+disabledExtension({
+  on(name, fn) {
+    (disabled[name] ??= []).push(fn);
+  },
+  registerTool() {},
+  registerCommand() {},
+});
+assert.deepEqual(
+  disabled,
+  {},
+  "PI_POTETO_NUDGE=off registers no handlers: no system block, no message",
+);
+delete process.env.PI_POTETO_NUDGE;
 
 console.log("poteto-playbook-pointer => ok");
