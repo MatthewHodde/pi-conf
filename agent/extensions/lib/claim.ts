@@ -42,6 +42,11 @@ export function findTaskDir(cwd: string): string | null {
   return null;
 }
 
+/** True when base contains Backlog.md config or a tasks directory. */
+export function isBacklogProject(base: string): boolean {
+  return [...CONFIG_CANDIDATES, ...TASK_DIR_CANDIDATES].some((p) => existsSync(join(base, p)));
+}
+
 function listTaskFiles(taskDir: string): string[] {
   try {
     return readdirSync(taskDir).filter((f) => f.endsWith(".md"));
