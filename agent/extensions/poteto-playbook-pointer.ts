@@ -40,21 +40,26 @@ const PLAYBOOK_TABLE = PLAYBOOK_TRIGGERS.map(
   ([trigger, file]) => `- ${trigger} -> ${POTETO_PLAYBOOKS_DIR}${file}`,
 ).join("\n");
 
-export const POTETO_PLAYBOOK_POINTER = `## Poteto playbooks for task work
+export const POTETO_PLAYBOOK_POINTER = `## Poteto mode for task work
 
-Task-shaped work in this setup follows poteto mode. That covers code, review, plans, fixes, investigations, and shipping.
-Do these four steps in order, before any other work:
+When the task changes code, tests, docs, a plan, a review, or an investigation, poteto mode runs the session.
+Your first tool call must read the skill, before any other call:
 
-1. Read ${POTETO_SKILL_PATH} and follow it for this session.
-2. Match the task to one row below.
-3. Read that playbook file now.
-4. Copy its steps verbatim into the todolist. A skipped step stays with \`skip: <reason>\`.
+    ${POTETO_SKILL_PATH}
 
-No matching row means no playbook file. The skill in step 1 owns all other routing.
-Never pick a playbook by default. Never start task work from memory.
+Your second tool call must read the playbook that matches the task. Match with this table:
+${PLAYBOOK_TABLE}
 
-Match with this table:
-${PLAYBOOK_TABLE}`;
+Then work the task. Copy the playbook steps into the todolist before your first edit.
+
+Do not start task work from memory. No matching row means no playbook.
+
+First call: the skill. Second call: the matched playbook. Then the task.`;
+
+export const POTETO_NUDGE = `Rule for this task, before you do anything else:
+First tool call: read ${POTETO_SKILL_PATH}.
+Second tool call: read the playbook that matches this task. The match table sits in your system prompt under "Poteto mode for task work".
+Then do the task. Copy the playbook steps into the todolist before your first edit.`;
 
 export default function (pi: ExtensionAPI) {
   // Chain-append, same as host-tests-pointer.ts: the deepwiki-guard force-chain
@@ -62,4 +67,17 @@ export default function (pi: ExtensionAPI) {
   pi.on("before_agent_start", async (event) => ({
     systemPrompt: event.systemPrompt + "\n\n" + POTETO_PLAYBOOK_POINTER,
   }));
+
+  // The system block alone opened 0 playbooks in 4 graded weak-model runs.
+  // The same rule in the task turn opened one in 3 of 3. Deliver both.
+  pi.on("before_agent_start", async (event) => {
+    if (event.messageType !== "user") return;
+    return {
+      message: {
+        customType: "poteto-nudge",
+        content: POTETO_NUDGE,
+        display: true,
+      },
+    };
+  });
 }
