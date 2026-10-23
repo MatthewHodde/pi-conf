@@ -36,7 +36,7 @@ Tracked:
   `keybindings.json`
 - `extensions/`, including `patches/` and the apply and regen scripts
 - `skills/`, `themes/`, `prompts/`
-- `bin/tuicr` (the shim only) and `bin/scan-secrets` with its config and test
+- `bin/scan-secrets` with its config and test
 
 Ignored on purpose:
 
@@ -69,8 +69,8 @@ of which breaks on a machine with a different home directory.
   The literal is a last-resort sandbox default, never the primary source.
 - Docs and usage examples use the tilde form, `~/.pi/...`, which expands per
   machine. This covers the `extensions/` scripts (`abort.ts`, `disk-pressure.ts`,
-  `smolvm-aware.ts`, `apply-all-patches.sh`, `regen-patch.sh`), the `tuicr`
-  wrappers, and the `prompts/` templates.
+  `smolvm-aware.ts`, `apply-all-patches.sh`, `regen-patch.sh`), and the
+  `prompts/` templates.
 - `bin/HANDOFF.md` and `extensions/HANDOFF.md` name `/home/matthew/...` and
   `/home/ubuntu/...` as literal historical paths. Those are narrative records of
   where a change was made, not path resolution, so they stay as written.
@@ -131,9 +131,8 @@ backlog.md CLI.
    closed, which blocks every pi-mediated commit.
 
 7. Install the backlog.md CLI on PATH so the `backlog` MCP server in `mcp.json`
-   works. Install tuicr with `mise install github:agavra/tuicr`, or put
-   `tuicr.real` next to the `bin/tuicr` shim, or set `TUICR_BIN`. The shim exits
-   127 with these same instructions.
+   works. Install tuicr with `mise install github:agavra/tuicr` so the
+   pi-tuicr package finds tuicr on PATH.
 
 8. Let `trust.json` rebuild from trust prompts. Paths from another machine, for
    example `/home/matthew/...`, never match on a different home directory.
@@ -353,7 +352,6 @@ the table comes from pi defaults or from pi-vim-keys.
 |-------|---------|
 | `ask-user` | Structured decision handshake before high-stakes choices |
 | `conventional-commits` | Enforce `type(scope): description` format |
-| `tuicr` | Run tuicr review sessions in cmux, tmux, Zellij, or Herdr |
 
 Skills shipped by npm packages load on their own from `agent/npm`.
 `@whamp/pi-pstack` carries the review and workflow skills (code-review,
