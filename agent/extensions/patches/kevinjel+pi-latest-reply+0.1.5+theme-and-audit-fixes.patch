@@ -1,0 +1,69 @@
+--- a/node_modules/@kevinjel/pi-latest-reply/extensions/latest-reply.ts
++++ b/node_modules/@kevinjel/pi-latest-reply/extensions/latest-reply.ts
+@@ -7,6 +7,7 @@
+ type Turn = { prompt: string; reply: string };
+ let turns: Turn[] = [];
+ let pendingPrompt = "";
++const seenAssistant = new Set<unknown>();
+ 
+ function loadBindings(): Record<string, string[]> {
+   try {
+@@ -28,18 +29,27 @@
+ 
+ const bindings = loadBindings();
+ 
++function sizeValue(value: unknown, fallback: string): string | number {
++  if (typeof value === "number") return Number.isFinite(value) && value > 0 ? value : fallback;
++  if (typeof value === "string") {
++    const parsed = Number.parseFloat(value);
++    return Number.isFinite(parsed) && parsed > 0 ? value : fallback;
++  }
++  return fallback;
++}
++
+ function loadLayout(): { width: string | number; maxHeight: string | number; topOffset: number } {
+   try {
+     const dir = process.env.PI_CODING_AGENT_DIR || join(homedir(), ".pi", "agent");
+     const settings = JSON.parse(readFileSync(join(dir, "settings.json"), "utf8"));
+     const layout = settings.piLatestReply;
+     return {
+-      width: typeof layout?.width === "string" || typeof layout?.width === "number" ? layout.width : "92%",
+-      maxHeight: typeof layout?.maxHeight === "string" || typeof layout?.maxHeight === "number" ? layout.maxHeight : "88%",
++      width: sizeValue(layout?.width, "97%"),
++      maxHeight: sizeValue(layout?.maxHeight, "94%"),
+       topOffset: typeof layout?.topOffset === "number" ? layout.topOffset : 2,
+     };
+   } catch {
+-    return { width: "92%", maxHeight: "88%", topOffset: 2 };
++    return { width: "97%", maxHeight: "94%", topOffset: 2 };
+   }
+ }
+ 
+@@ -61,7 +71,9 @@
+   if (!text) return;
+   if (message.role === "user") {
+     pendingPrompt = text;
+-  } else if (message.role === "assistant" && turns.at(-1)?.reply !== text) {
++  } else if (message.role === "assistant") {
++    if (seenAssistant.has(message)) return;
++    seenAssistant.add(message);
+     turns.push({ prompt: pendingPrompt, reply: text });
+     pendingPrompt = "";
+   }
+@@ -230,7 +242,7 @@
+       : [];
+ 
+     const border = (line: string) => this.theme.fg(this.borderColor, line);
+-    const panel = (line: string) => `\x1b[48;5;0m${line}\x1b[49m`;
++    const panel = (line: string) => line;
+     const body = (line: string, row = -1) => {
+       let content = truncateToWidth(line, contentWidth);
+       if (this.searchQuery) {
+@@ -272,6 +284,7 @@
+   pi.on("session_start", (_event: any, ctx: any) => {
+     turns = [];
+     pendingPrompt = "";
++    seenAssistant.clear();
+     for (const entry of ctx.sessionManager.getBranch()) addMessage(entry.message);
+   });
+   pi.on("message_end", (event: any) => addMessage(event.message));

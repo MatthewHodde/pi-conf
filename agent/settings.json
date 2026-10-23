@@ -26,7 +26,8 @@
     "npm:agent-ste",
     "npm:@luan.sh/pi-tuicr",
     "npm:@narumitw/pi-usage",
-    "npm:@lenard9191/pi-project-profile@1.3.2"
+    "npm:@lenard9191/pi-project-profile@1.3.2",
+    "npm:@kevinjel/pi-latest-reply"
   ],
   "extensions": [],
   "showHardwareCursor": true,
