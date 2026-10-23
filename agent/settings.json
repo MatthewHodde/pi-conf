@@ -25,7 +25,8 @@
     "git:github.com/omerxx/pi-head@520de097e34d84e2c4d18aeafa9e9d06207d7b9d",
     "npm:agent-ste",
     "npm:@luan.sh/pi-tuicr",
-    "npm:@narumitw/pi-usage"
+    "npm:@narumitw/pi-usage",
+    "npm:@lenard9191/pi-project-profile@1.3.2"
   ],
   "extensions": [],
   "showHardwareCursor": true,

@@ -18,5 +18,6 @@ agent/bin/gitleaks
 /.cache/
 /agent/*.bak*
 agent/sandbox-state/
+/agent/project-profile/profiles/
 /.host-tests/
 /agent/native/
