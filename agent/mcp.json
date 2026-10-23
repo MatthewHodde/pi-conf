@@ -7,8 +7,12 @@
     },
     "backlog": {
       "command": "backlog",
-      "args": ["mcp", "start"],
-      "description": "Backlog.md task management server (create, edit, search, close tasks)"
+      "args": [
+        "mcp",
+        "start"
+      ],
+      "description": "Backlog.md task management server (create, edit, search, close tasks)",
+      "exposure": "direct"
     }
   }
 }
