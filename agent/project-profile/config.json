@@ -1,17 +1,7 @@
-// pi-project-profile runs in report-only mode.
-// The poteto playbooks own turn endings and done-ness, so this gate never
-// requests a continuation turn.
 {
   "verify": {
-    // 0 = a red check reports once and stops. No repair turn is sent back.
     "maxRepairRounds": 0,
-    // Do not ask the agent for a summary on give-up. That summary would
-    // overwrite the playbook's mandated final reply.
     "summarizeOnGiveUp": false,
-    // Skip the gate where no dialog UI exists (print/json) and in subagent
-    // children, which bind mode "print" with no UI context and must keep
-    // their own turn contract. A standalone RPC client that provides a UI
-    // context still runs the gate; report-only mode covers that case.
     "headless": false
   }
 }
