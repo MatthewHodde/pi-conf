@@ -8,7 +8,7 @@
  
  function loadBindings(): Record<string, string[]> {
    try {
-@@ -28,18 +29,27 @@
+@@ -28,22 +29,31 @@
  
  const bindings = loadBindings();
  
@@ -39,6 +39,11 @@
    }
  }
  
+-const layout = loadLayout();
++let layout = loadLayout();
+ const keysFor = (name: string, fallback: string[]) => bindings[name] ?? fallback;
+ const matchesBinding = (data: string, name: string, fallback: string[]) =>
+   keysFor(name, fallback).some((key) => matchesKey(data, key));
 @@ -61,7 +71,9 @@
    if (!text) return;
    if (message.role === "user") {
@@ -67,3 +72,12 @@
      for (const entry of ctx.sessionManager.getBranch()) addMessage(entry.message);
    });
    pi.on("message_end", (event: any) => addMessage(event.message));
+@@ -285,6 +298,8 @@
+       return;
+     }
+ 
++    layout = loadLayout();
++
+     const borderColor = pi.getThinkingLevel?.() === "off"
+       ? "dim"
+       : `thinking${String(pi.getThinkingLevel?.() ?? "medium")[0].toUpperCase()}${String(pi.getThinkingLevel?.() ?? "medium").slice(1)}`;
