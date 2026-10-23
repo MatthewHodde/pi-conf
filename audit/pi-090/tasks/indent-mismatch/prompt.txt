@@ -1,0 +1,1 @@
+Edit the file app.js. Change the language value from "en" to "de". Keep the file style as it is.

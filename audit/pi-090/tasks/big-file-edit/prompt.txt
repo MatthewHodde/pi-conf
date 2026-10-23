@@ -1,0 +1,1 @@
+Edit reporters.js. In reporter17 only, change the mode value from "batch" to "stream". Leave every other reporter unchanged.

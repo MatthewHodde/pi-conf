@@ -1,0 +1,1 @@
+Edit the file app.js. Make three changes. Set name to "beta". Set count to 2. Set debug to true. Change nothing else.

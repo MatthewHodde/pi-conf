@@ -1,0 +1,1 @@
+Edit the file app.js. Add a function multiply(a, b) that returns the product. Place it right after add. Add multiply to the exports.

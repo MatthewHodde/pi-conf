@@ -1,0 +1,1 @@
+Edit config.json. Change the windowsPath value to the Windows path C:\\logs\\run.txt. Keep the escaping correct. Change nothing else.

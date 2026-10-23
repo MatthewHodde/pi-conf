@@ -1,0 +1,8 @@
+{
+  "name": "edge-cases",
+  "greeting": "say \"hello\" now",
+  "windowsPath": "C:\\temp\\file.txt",
+  "pattern": "find \"quoted\" text",
+  "template": "first line\nsecond line",
+  "note": "plain value"
+}
