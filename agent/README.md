@@ -352,6 +352,7 @@ the table comes from pi defaults or from pi-vim-keys.
 |-------|---------|
 | `ask-user` | Structured decision handshake before high-stakes choices |
 | `conventional-commits` | Enforce `type(scope): description` format |
+| `tuicr` | Read and answer tuicr review comments through the CLI |
 
 Skills shipped by npm packages load on their own from `agent/npm`.
 `@whamp/pi-pstack` carries the review and workflow skills (code-review,
