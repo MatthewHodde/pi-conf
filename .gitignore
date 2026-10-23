@@ -21,3 +21,9 @@ agent/sandbox-state/
 /agent/project-profile/profiles/
 /.host-tests/
 /agent/native/
+
+# pi writes these at runtime. Committing them creates constant churn.
+/agent/compact-tools.json
+/agent/compact-tools-notices/
+/agent/pi-pretty/
+/agent/pi-usage.json
