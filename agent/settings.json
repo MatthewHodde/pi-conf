@@ -22,7 +22,6 @@
     "npm:pi-subagents",
     "npm:@whamp/pi-pstack",
     "npm:@ff-labs/pi-fff",
-    "git:github.com/omerxx/pi-head@520de097e34d84e2c4d18aeafa9e9d06207d7b9d",
     "npm:agent-ste",
     "npm:@luan.sh/pi-tuicr",
     "npm:@narumitw/pi-usage",
