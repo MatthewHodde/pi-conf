@@ -11,6 +11,7 @@ The pi-tuicr package opens the tuicr review pane inside pi. The human writes com
 
 1. **User-led review.** The human reviews the agent patch and writes comments. Read the comments when the user says they are ready. Do not add comments unless the user asks for an answer. Never write text as the user.
 2. **Agent answers.** The user asks the agent to respond to a specific comment. Add an answer with `tuicr review add`, an explicit `--username`, and the answered comment id in the text.
+3. **Agent deletes.** The user asks to remove a comment, for example an answer the agent wrote by mistake. Use `tuicr review delete` and confirm with a re-read.
 
 If the intent is unclear, ask the user.
 
@@ -75,6 +76,21 @@ tuicr review comments --session <canonical-path>
 ```
 
 Check that your new comment exists and `author` matches your `--username`. Check that the stored line lies inside the diff on the side you gave. A line outside the diff stores and exits 0 but never renders in the pane.
+
+## Delete a comment
+
+Delete one comment when the user asks for it or when your answer was wrong:
+
+```bash
+tuicr review delete --session <path> --comment-id <id>
+```
+
+- Take `--comment-id` from the `id` field of `tuicr review comments`.
+- The command removes exactly one comment and prints `{"deleted": "<id>"}`.
+- A wrong id fails with a non-zero exit.
+- Re-read the comments after the delete and confirm the id is gone.
+
+For whole-session cleanup, `tuicr review clearc --session <path>` removes all comments and keeps review marks, and `tuicr review clear --session <path>` removes comments and marks. Ask the user before you clear a session, because a clear removes the user comments too.
 
 ## Data directory
 
